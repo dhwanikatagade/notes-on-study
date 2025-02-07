@@ -736,25 +736,6 @@
   - Sequential consistency is not always required for the program semantics but can be necessary in some cases
     - A multiple producer and multiple consumer use case will require sequential consistency
       - All consumers need to see the actions of all producers in the same order
-    - If the code has cross thread causality expectations across more than two threads then sequential consistency is required
-      - ```cpp
-        int g{0}; // normal int
-        atomic<int> x{0}, y{0}; // atomics
-        void thread1() {
-          g = 1;
-          x = 1;
-        }
-        void thread2() {
-          if( x == 1 )
-            y = 1;
-        }
-        void thread3() {
-          if( y == 1 )
-            assert( g == 1 );
-        }
-        ```
-      - If `y==1` means  `x==1` means `g==1` is expected then sequential consistency needs to be enforced across threads
-      - Without sequential consistency and just with Release/Acquire this cross thread causality is not guaranteed
     - If a consistent visibility of a total store ordering is required across multiple threads then sequential consistency is required
       - ```cpp
         atomic<int> x{0}, y{0}; // atomics
@@ -829,6 +810,7 @@
       - Release/Acquire maintains **Write->Write and Read->Write** operation orderings with respect to a write release operation
       - Release/Acquire maintains **Read->Read and Read->Write** operation orderings with respect to a read acquire operation
       - It leaves out the Write->Read reordering restriction which is included in sequential consistency
+        - This allows an atomic release operation to be reordered with a subsequent atomic acquire operation
         - The Write->Read (#StoreLoad) barrier is a more restrictive barrier and hence more costly on performance
         - Leaving out #StoreLoad barrier allows *Independent Reads of Independent Writes* to be reordered
         - This allows two readers to see the same pair of stores to appear in different orders
