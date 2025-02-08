@@ -260,29 +260,43 @@
       - This is an extension (non modification of existing code) to the code
       - General software engineering principles recommend favouring extension over modification
       - If an extension breaks existing behaviour then that's not good
-- Visible side effect
-  - This definition is relevant for value visibility of writes to non atomic variables in cross thread contexts
+- Visibility of a side effect
+  - Broadly speaking this determines which write operation's value will be picked up by a read operation
+  - There can be 3 separate scenarios and the rules apply differently in each case
+  - Non shared variables in a single thread context
     - Visibility of side effects is of non trivial interest only in a cross thread scenario
     - In a single threaded context the *sequenced before* relation trivially determines value visibility
-    - Side effect of operation A is always visible to operations sequenced after A due to the as-if rule
+    - A read operation on M always sees the last side effect on M immediately *sequenced before* it
     - Even if operations are reordered the net effect will honour the source code ordering as per the as-if rule
-  - A side effect A on a non atomic variable is visible to a value computation B if
-    - A *happens before* B, and
-    - There isn't a side effect X such that A *happens before* X and X *happens before* B
-      - No other side effect after A becomes visible to B before B sees A
-  - In a cross thread context the *happens before* relation determines the value visibility of non atomic variables
-    - Read and write of the same variable across different threads makes it a shared variable
-    - Cross thread operations on a shared non atomic variable need to have *happens before* ordering between them
-      - If there is no *happens before* ordering then they become potentially concurrent
-      - This amounts to data race which leads to undefined behaviour
-      - This can also be seen as an ambiguity regarding the visibility of side effects
-    - The *happens before* ordering is usually achieved by synchronising access to the shared non atomic variable
-    - A value computation of a non atomic variable always reads the value of the visible side effect
-      - If there is no visible side effect then this is indicative of data race and undefined behaviour
-      - In this case the value actually read will be ambiguous
-  - For shared atomic variables the value read by an operation B is generally non-deterministic
-    - B can read the value from any side effect A as long as B does not *happen before* A
-    - This leaves many candidate side effects which can be read by B depending on run time conditions
+  - Non atomic shared variables in a cross thread context
+    - Visible side effect
+      - This definition is relevant for value visibility of writes to non atomic variables in cross thread contexts
+      - A side effect A on a non atomic variable is visible to a value computation B if
+        - A *happens before* B, and
+        - There isn't a side effect X such that A *happens before* X and X *happens before* B
+          - No other side effect after A becomes visible to B before B sees A
+    - In a cross thread context the *happens before* relation determines the value visibility of non atomic variables
+      - Read and write of the same variable across different threads makes it a shared variable
+      - Cross thread operations on a shared non atomic variable need to have *happens before* ordering between them
+        - If there is no *happens before* ordering then they become potentially concurrent
+        - This amounts to data race which leads to undefined behaviour
+        - This can also be seen as an ambiguity regarding the visibility of side effects
+      - The *happens before* ordering is usually achieved by synchronising access to the shared non atomic variable
+      - A value computation of a non atomic variable always reads the value of the visible side effect
+        - If there is no visible side effect then this is indicative of data race and undefined behaviour
+        - In this case the value actually read will be ambiguous
+  - Atomic shared variables in a cross thread context
+    - For shared atomic variables the value read by an operation B is generally non-deterministic
+      - B can read the value from any side effect A as long as B does not *happen before* A
+      - This leaves many candidate side effects which can be read by B depending on run time conditions
+        - This is the case where no specific side effect A *happens before* B
+        - B can read a value from anywhere in the modification order of the atomic as long as B does not *happen before* A
+      - If there is a specific side effect A that *happens before* B, then B can't read values before A in the modification order
+        - B reads side effect of A or any value after it in the modification order as long as B does not *happen before* it
+    - Cross thread operations on atomic variables do not require *happens before* relations between them
+      - Atomic operations are atomic by definition and are never partially done
+      - These operations do not cause data races in the absence of *happens before* relations
+      - But to limit the values that can be read by a read, *happens before* is introduced via release/acquire semantics
 - Coherence rules
   - These are common sense rules that are formalized to put restrictions on atomic instruction reordering
   - These rules are in four flavours
