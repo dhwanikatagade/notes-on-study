@@ -117,7 +117,6 @@
   - These locked instructions enforce the minimal requirements for atomic operations
     - Operations are atomic and cannot be partially done by being interrupted mid way
     - Data races with torn reads and writes don't happen
-    - Memory locations are read and written directly without depending on cache for performance
     - Memory bus locks are taken to prevent concurrent modifications
     - Concurrent operations happen one after the other and enforce a clear modification total order
     - Total modification order of one atomic variable is maintained across all threads
@@ -218,13 +217,13 @@
     - Atomic operations and fences conditionally establish *synchronizes with* relations
 - Release sequence
   - Release sequence is relevant in the case of release/acquire synchronization on an atomic variable
-    - There are scenarios where an older store release would need to synchronize with a much later load acquire
+    - There are scenarios where an earlier store release would need to synchronize with a much later load acquire
     - Release sequence allows for intervening modification operations on the atomic to not break this synchronization
     - Read-modify-write operations that read a variable and then modify it based on the read value capture semantic chaining of values
       - E.g. maintain a counter with increments and decrements without losing count
       - E.g. logical OR multiple flags in a status word as flags are set one by one
       - If all intervening operations are read-modify-write then this chain maps to the variable's total modification order
-      - A read-modify-write operation on any thread always reads the write from the last read-modify-write operation that completed before this one gets to start
+      - Here a read-modify-write operation on any thread will read the value written by the previous read-modify-write operation from the modification order
       - A read-modify-write operation is also atomic making it uninterruptible and indivisible between the read and write
       - The limited and stricter modification required for semantic value chaining is well represented by read-modify-write operations
     - Release sequences are used in the implementation of reference counting
@@ -290,32 +289,40 @@
       - B can read the value from any side effect A as long as B does not *happen before* A
       - This leaves many candidate side effects which can be read by B depending on run time conditions
         - This is the case where no specific side effect A *happens before* B
-        - B can read a value from anywhere in the modification order of the atomic as long as B does not *happen before* A
+        - B can read from side effect A anywhere in the modification order of the atomic as long as B does not *happen before* A
+        - The values that B can read are also limited by other coherence rules
       - If there is a specific side effect A that *happens before* B, then B can't read values before A in the modification order
         - B reads side effect of A or any value after it in the modification order as long as B does not *happen before* it
+        - This is what was called *visible sequence of side effects* till C++14
+        - Since C++17 this is driven by the write read coherence rule
     - Cross thread operations on atomic variables do not require *happens before* relations between them
       - Atomic operations are atomic by definition and are never partially done
       - These operations do not cause data races in the absence of *happens before* relations
       - But to limit the values that can be read by a read, *happens before* is introduced via release/acquire semantics
+  - TODO - add diagrams
 - Coherence rules
   - These are common sense rules that are formalized to put restrictions on atomic instruction reordering
   - These rules are in four flavours
     - Write-write coherence
       - For two atomic writes A and B on M if A *happens before* B
       - Then A will precede B in the modification order of M
+      - The order of writes in the modification order of M does not contradict *happens before*
     - Read-read coherence
       - For two atomic reads A and B on M if A *happens before* B
       - And if A reads a value written by another atomic write X
       - And if B reads a value written by another atomic write Y
       - Then X will precede Y in the modification order of M
+      - Two reads where one *happens before* the other cannot read from two writes in the reversed modification order
     - Read-write coherence
       - If A is an atomic read that *happens before* an atomic write B
       - And A reads it's value written by X
       - Then X precedes B in the modification order of M
+      - Reads do not read values written in the future according to *happens before*
     - Write-read coherence
       - If A is an atomic write that *happens before* an atomic read B
       - And B reads it's value from another atomic write Y
       - Then A precedes Y in the modification order of M
+      - Reads do not read overwritten values
   - Generally the total modification order of an atomic variable M can take any sequence of modifications at run time
     - For a run all threads see the same modification order
     - The sequence can be different across different runs
@@ -358,6 +365,7 @@
         - The problem here is that this execution is counter intuitive
           - The same code with non-atomics leaves `x == y == 0`
           - With non-atomics the above code doesn't have a data race and the compiler and hardware are not allowed to invent one
+          - With atomics data races don't exist and this theoretically leaves the possibility of speculative execution
       - The worst scenario is where OOTA loads theoretically result in precondition violations for some opaque third-party library functions
       - ```cpp
         // x and y are only assigned 0,1,2 in the code
@@ -606,36 +614,59 @@
     - If A *synchronizes with* B
     - If A *simply happens before* X, and X *simply happens before* B
       - *Simply happens before* is transitive
-  - This relation is used to more definitively reason about cross thread visibility of side effects in the face of memory reordering
+  - This relation is used to reason about cross thread visibility of side effects in the face of memory reordering
     - If operation A *simply happens before* operation B then 
       - A and B don't race with each other as they have a defined ordering among them
-      - Side effects of A will be visible to B
+      - Side effects of A if not overwritten by subsequent changes will be visible to B
+      - Both the above effects are applicable only to the threads running A and B
     - This relation drives the limited visibility guarantee across two threads running the two related operations
       - This does not guarantee total modification ordering visibility across all threads which is driven by *strongly happens before*
     - In the absence of consume operations *happens before* serves the same purpose as *simply happens before*
     - In presence of consume operations *happens before* falls weak for this due to lack of transitivity
 - Strongly happens before
+  - 2do
+  - This relation is a subset of *simply happens before*
+    - If A *strongly happens before* B then A also *simply happens before* B
+    - If A *simply happens before* B then **not necessarily** A *strongly happens before* B
+    - *Strongly happens before* eliminates some pairs that are considered less strongly ordered
+  - *Strongly happens before* is used across the library to define ordering guarantees
+    - If A *strongly happens before* B then A will be seen as happening before B in all contexts
+    - If A *strongly happens before* B then all threads will agree on that ordering not immediately but eventually
+  - *Strongly happens before* is also used to define the total modification order of `memory_order_seq_cst` operations
+    - *Strongly happens before* may include operation pairs not present in the total modification order
+    - Only the `memory_order_seq_cst` operations find a place in the total modification order
+    - The total modification order uses *coherence ordered before* to place the remaining `memory_order_seq_cst` operations
   - The current definition of this relation was introduced in C++20
     - Pre C++20 *strongly happens before* was what is now defined as *simply happens before*
-    - *Strongly happens before* is used across the library to define ordering guarantees
-    - *Strongly happens before* is used to define the ordering for sequentially consistent atomic operations in their total modification order
+      - Pre C++20 this was the equivalent of *happens before* in the absence of consume operations
+      - Consequently the seq_cst total modification order was considered to be consistent with *happens before*
     - C++20 eliminated some cases from this definition because
       - They were expensive to implement correctly on weakly ordered architectures
       - The eliminated cases enforced memory ordering that did not represent compelling use cases for the extra cost
-      - **TODO validate** - It forced the inclusion of release/acquire based operations into the total ordering of sequentially consistent operations (possible ex here https://stackoverflow.com/a/50442797/2130670)
+      - The problem case was where mixed memory orders were used for synchronization
+        - For example if a `memory_order_release` release synchronized with a `memory_order_seq_cst` acquire
+        - A `memory_order_seq_cst` operation *sequenced before* the release was required to be ordered before the acquire
+        - These being `memory_order_seq_cst` operations their ordering had to be maintained across all threads
+        - The minimum ordering requirements of `memory_order_release` are not enough to enforce orderings across all threads
+        - This was not a problem for strongly ordered architectures as their operations provided more than minimum ordering
+        - For weakly ordered architectures this corner case was not enforced by the implementation used for release/acquire
+          - Covering this corner case meant making release/acquire much stronger than the minimum requirement
+          - This was not in line with the spirit of light weight release/acquire but more tending towards seq_cst
+        - **TODO - factual review and add a diagram**
   - Operation A *strongly happens before* operation B
     - If A is *sequenced before* B
       - This is the trivial case applicable for a single thread
     - If A *synchronizes with* B through sequentially consistent atomic operations
-      - This leaves out cross thread operations that enforce weaker *happens before* relations
-      - Having to including these in the total modification ordering of sequentially consistent atomic operations is avoided
+      - This leaves out cross thread operations like release/acquire that enforce weaker *happens before* relations
+        - The ordering guarantee for these is required only across the releasing and acquiring threads
+        - Requiring all threads to agree on that ordering imposes extra reordering restrictions not needed for release/acquire
     - If A and B are in a chain - A *sequenced before* X *simply happens before* Y *sequenced before* B
       - This sub case is specifically included after the above exclude of weaker *happens before* cases
       - X and Y may be weakly synchronized and hence left out of *strongly happens before*
       - But operations before X and after Y in their own threads have a stronger *happens before* between them
-      - This is due to the visibility guarantees enforced by *synchronizes with*
-      - **TODO validate** - still not clear why this should be included even if they are weaker atomic operations
-        - https://stackoverflow.com/a/50442797/2130670 might have a hint
+        - Two `memory_order_seq_cst` operations in these threads will have *happens before* relation between them
+        - The same ordering will have to be seen by other threads since they are `memory_order_seq_cst` operations
+      - **TODO validate**
     - If A *strongly happens before* X, and X *strongly happens before* B
       - *Strongly happens before* is transitive
 - Coherence ordered before
@@ -1145,6 +1176,7 @@ Hardware memory models and their cost on performance
 1. Instruction pipelining - https://en.wikipedia.org/wiki/Instruction_pipelining
 1. Undefined behavior in c/c++: i++ + ++i vs ++i + i++ - https://stackoverflow.com/questions/39900469/undefined-behavior-in-c-c-i-i-vs-i-i
 1. With memory_order_relaxed how is total order of modification of an atomic variable assured on typical architectures? - https://stackoverflow.com/questions/58827774/with-memory-order-relaxed-how-is-total-order-of-modification-of-an-atomic-variab
+1. What is guaranteed with C++ std::atomic at the programmer level - https://stackoverflow.com/questions/59999996/what-is-guaranteed-with-c-stdatomic-at-the-programmer-level
 1. The Synchronizes-With Relation - https://preshing.com/20130823/the-synchronizes-with-relation/
 1. What does "release sequence" mean? - https://stackoverflow.com/questions/38565650/what-does-release-sequence-mean
 1. Weaken Release Sequences - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0982r1.html
@@ -1213,3 +1245,4 @@ https://bartoszmilewski.com/2008/12/01/c-atomics-and-memory-ordering/
 Questions for potential answers
 https://stackoverflow.com/questions/76616852/how-to-understand-sequentially-consistent-and-happen-before
 https://stackoverflow.com/questions/78943157/why-is-the-c-standard-definition-of-coherenced-order-before-different-from-t
+https://stackoverflow.com/questions/58986135/what-does-strongly-happens-before-mean
