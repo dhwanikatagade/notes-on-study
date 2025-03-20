@@ -14,15 +14,21 @@
       - Code can be executed ahead of time to optimise throughput 
       - Processor reorders the code to achieve optimal performance
     - Compilers and processors reorder code while maintaining the as-if rules
+      - While reordering operations the observable behaviour of the program should not change
+        - Data written to files is the same as it would be written if code is executed in source code order
+        - Prompt data written to interactive devices is written before input is read from the device
+        - Volatile memory accesses per thread are made strictly as per source code ordering
       - The code of each thread appears to execute in source code order
+        - This is under the assumption that no second thread peaks into the actual execution of the thread
+        - The net result of the thread should be the same as if executed in source code order
+        - Shared variable operations within a thread give effect to cross thread peaking
+        - The reordering permitted under as-if rule happens wherever it cannot be detected
       - Multithreaded execution is some sequentially consistent interleaving of the multiple threads of execution
-      - All memory writes are atomically and globally visible simultaneously to all processors
-      - The observable behaviour of the program does not change
-      - Volatile memory accesses are made strictly as per source code ordering
-      - Data written to files is the same as it would be written if code is executed in source code order
-      - Prompt data written to interactive devices is written before input is read from the device
       - The requirements to maintain these illusions are collectively called the as-if rule
       - All restrictions of the as-if rule are applicable only to valid programs with no UB
+        - Non atomic shared variables should not have data races otherwise the program has UB and as-if rules ar off
+        - Atomic shared variables do not cause UB but their purpose is to enable reads from cross thread writes
+          - In this case as well the as-if behaviour of a single thread of executions does not hold
       - Also the as-if rule is relaxed for copy/move elision
     - The code reordering done by compilers is visible in the assembly code
     - Generally it is not possible to observe code reordering in the processor (SC-DRF compliant)
@@ -756,14 +762,15 @@
     - The operations of any processor in this interleaving should be executed as if in source code order
       - All processors should get to see all memory operations from all processors in program order
       - All types of memory operation swapping are disallowed (W->W, R->R, R->W, W->R orderings have to be maintained)
-      - Practically this constraint also applies only to shared variables
+      - Practically this constraint applies only to shared variables operations which are not reordered among themselves
+      - The reordering of non shared variable operations is also limited to within the boundaries of shared variable operations
       - Its ok to reorder non shared variable operations as long as there is no way to tell the difference
   - As per the C++20 standard `memory_order_seq_cst` establishes a single total order across all atomic operations and fences that are marked `memory_order_seq_cst`
     - The ordering of operations in the total order is driven by the *strongly happens before* relation
       - If operation A *strongly happens before* operation B then
         - If A and B are `memory_order_seq_cst` operations then A is placed before B in the total order
     - The ordering of operations and fences in the total order is driven by the *coherence ordered before* relation
-      - If operations A is *coherence ordered before* B then
+      - If operation A is *coherence ordered before* B then
         - If A and B are both `memory_order_seq_cst` operations then A is placed before B
         - If A is a `memory_order_seq_cst` operation and B *happens before* a `memory_order_seq_cst` fence Z then A is placed before Z
         - If a `memory_order_seq_cst` fence Z *happens before* A and B is a `memory_order_seq_cst` operation then Z is placed before B
