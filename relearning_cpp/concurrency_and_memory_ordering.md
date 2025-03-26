@@ -630,7 +630,6 @@
     - In the absence of consume operations *happens before* serves the same purpose as *simply happens before*
     - In presence of consume operations *happens before* falls weak for this due to lack of transitivity
 - Strongly happens before
-  - 2do
   - This relation is a subset of *simply happens before*
     - If A *strongly happens before* B then A also *simply happens before* B
     - If A *simply happens before* B then **not necessarily** A *strongly happens before* B
@@ -649,16 +648,18 @@
     - C++20 eliminated some cases from this definition because
       - They were expensive to implement correctly on weakly ordered architectures
       - The eliminated cases enforced memory ordering that did not represent compelling use cases for the extra cost
-      - The problem case was where mixed memory orders were used for synchronization
-        - For example if a `memory_order_release` release synchronized with a `memory_order_seq_cst` acquire
-        - A `memory_order_seq_cst` operation *sequenced before* the release was required to be ordered before the acquire
+      - The problem case was where mixed memory orders were used for synchronization on weakly ordered architectures
+        - Acquire/release and seq cst implementations were strong enough for their individual ordering requirements
+        - But when synchronization happened between acquire/release and seq cst then the problem cases crept up
+        - ![image missing](./images/conc_mem_ord/cpp20_strong_hb_sub_case.drawio.png "Strongly happens before sub case.")
+        - For example if a `memory_order_release` release **(b)** synchronized with a `memory_order_seq_cst` acquire **(c)**
+        - A `memory_order_seq_cst` operation **(a)** *sequenced before* the release was required to be ordered before the acquire **(c)**
         - These being `memory_order_seq_cst` operations their ordering had to be maintained across all threads
         - The minimum ordering requirements of `memory_order_release` are not enough to enforce orderings across all threads
         - This was not a problem for strongly ordered architectures as their operations provided more than minimum ordering
         - For weakly ordered architectures this corner case was not enforced by the implementation used for release/acquire
           - Covering this corner case meant making release/acquire much stronger than the minimum requirement
           - This was not in line with the spirit of light weight release/acquire but more tending towards seq_cst
-        - **TODO - factual review and add a diagram**
   - Operation A *strongly happens before* operation B
     - If A is *sequenced before* B
       - This is the trivial case applicable for a single thread
@@ -668,11 +669,12 @@
         - Requiring all threads to agree on that ordering imposes extra reordering restrictions not needed for release/acquire
     - If A and B are in a chain - A *sequenced before* X *simply happens before* Y *sequenced before* B
       - This sub case is specifically included after the above exclude of weaker *happens before* cases
-      - X and Y may be weakly synchronized and hence left out of *strongly happens before*
-      - But operations before X and after Y in their own threads have a stronger *happens before* between them
-        - Two `memory_order_seq_cst` operations in these threads will have *happens before* relation between them
-        - The same ordering will have to be seen by other threads since they are `memory_order_seq_cst` operations
-      - **TODO validate**
+      - ![image missing](./images/conc_mem_ord/cpp20_strong_hb_hwsync.drawio.png "Strongly happens before hwsync.")
+      - Weaker architectures like Power use a `hwsync` instruction either before or after a seq cst operation
+      - For two seq cst operations to get totally ordered across all threads they need at least one `hwsync` between them
+      - Between **(a)** and **(c)** we can't be assured of finding an `hwsync` instruction if a prefix `hwsync` is used
+      - But between **(a)** and **(d)** we can find a `hwsync` if either prefix (purple) or postfix (blue) `hwsync` is used
+      - An `hwsync` is found between two seq cst operations if the path between them starts and ends with *sequenced before*
     - If A *strongly happens before* X, and X *strongly happens before* B
       - *Strongly happens before* is transitive
 - Coherence ordered before
@@ -1195,6 +1197,8 @@ Hardware memory models and their cost on performance
 1. Revising the C++ memory model - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0668r5.html
 1. What is the significance of 'strongly happens before' compared to '(simply) happens before'? - https://stackoverflow.com/questions/70554277/what-is-the-significance-of-strongly-happens-before-compared-to-simply-happ
 1. What does "strongly happens before" mean? - https://stackoverflow.com/questions/58986135/what-does-strongly-happens-before-mean
+1. Repairing Sequential Consistency in C/C++11 - https://plv.mpi-sws.org/scfix/paper.pdf
+1. C/C++11 mappings to processors - https://www.cl.cam.ac.uk/~pes20/cpp/cpp0xmappings.html
 1. How to understand the changes to sequentially-consistent ordering in C++20? - https://stackoverflow.com/questions/73446334/how-to-understand-the-changes-to-sequentially-consistent-ordering-in-c20
 1. On Fuzzing Concurrent Programs With C++ Atomics - https://escholarship.org/content/qt5rw7n0xs/qt5rw7n0xs_noSplash_05af11de8f9dcecb647440a000b302fe.pdf?t=q8rw3a
 1. Memory Ordering at Compile Time - https://preshing.com/20120625/memory-ordering-at-compile-time/
