@@ -1024,7 +1024,7 @@
     - Any counter decrement needs to be ordered before any check for the counter value for resource deletion
     - The decrement operation cannot use relaxed memory ordering
 - Happens before relations enforced by different memory orderings
-  - ![image missing](./images/conc_mem_ord/mem_orders_happens_before.png "Happens before relations of memory orderings.")
+  - ![image missing](./images/conc_mem_ord/mem_orders_happens_before.drawio.png "Happens before relations of memory orderings.")
 
 
 
