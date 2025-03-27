@@ -290,6 +290,11 @@
       - A value computation of a non atomic variable always reads the value of the visible side effect
         - If there is no visible side effect then this is indicative of data race and undefined behaviour
         - In this case the value actually read will be ambiguous
+    - ![image missing](./images/conc_mem_ord/visible_side_effects.drawio.png "Visible side effects.")
+      - **(a)** and **(c)** are potentially concurrent where **(c)** writes to `x` without acquiring the lock `lk`
+      - Both **(a)** and **(c)** *happen before* **(e)** but neither is unambiguously a visible side effect
+      - **(f)** is not a visible side effect for **(j)** since **(i)** is between them in the *happens before* path
+      - **(i)** is a visible side effect for **(j)** since there are no other side effects in the *happens before* path
   - Atomic shared variables in a cross thread context
     - For shared atomic variables the value read by an operation B is generally non-deterministic
       - B can read the value from any side effect A as long as B does not *happen before* A
@@ -305,7 +310,12 @@
       - Atomic operations are atomic by definition and are never partially done
       - These operations do not cause data races in the absence of *happens before* relations
       - But to limit the values that can be read by a read, *happens before* is introduced via release/acquire semantics
-  - TODO - add diagrams
+    - ![image missing](./images/conc_mem_ord/atomic_read_visibility.drawio.png "Visibility of atomic reads.")
+      - Write **(c)** *happens before* read **(h)** and hides the write **(a)**
+      - Write **(d)** *happens before* read **(h)** and hides the write **(b)**
+      - Read **(h)** *happens before* write **(k)** and cannot read it
+      - Write **(g)** has no ordering with read **(h)** and hence can be read by it and doesn't hide any other write
+      - The read **(h)** can read from one of the writes **(c)**, **(d)** or **(g)**
 - Coherence rules
   - These are common sense rules that are formalized to put restrictions on atomic instruction reordering
   - These rules are in four flavours
