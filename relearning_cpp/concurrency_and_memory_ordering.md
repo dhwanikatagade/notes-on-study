@@ -602,7 +602,8 @@
   - This can be a chain of *dependency ordered before* followed by any number of *carries dependency to*
   - Compared to *synchronizes with* this requires lesser ordering guarantees to be enforced
   - If operation A in thread TA is *dependency ordered before* operation B in thread TB then
-    - All values written in TA before A are guaranteed to be visible **only to** operations in TB that are data dependent on B 
+    - All values written in TA before A are guaranteed to be visible **only to** operations in TB that are data dependent on B
+  - The definition of *dependency ordered before* is slated to be deprecated in C++26
 - Inter thread happens before
   - This is a combination of the two inter thread synchronization flavours
     - It includes *synchronizes with* and *dependency ordered before*
@@ -710,13 +711,16 @@
       - A and B do not have any other ordering relation that enforces A to read before B's overwrite
       - A just happens to read the existing value before B overwrites it due to non-deterministic runtime conditions
     - If A is *coherence ordered before* B transitively via an intermediate operation X
+    - ![image missing](./images/conc_mem_ord/coherence_ordered_before.drawio.png "Coherence ordered before types.")
   - The definition of this relation has some parallels with three of the four coherence rules
     - Coherence ordering between two reads cannot be established based on the values they read
       - Hence the read-read coherence rule doesn't generate a condition for this relation
     - Coherence rules drive the total ordering of writes based on *happens before* relations between operations
     - This relation defines coherence ordering based on actual values read and written by operations at runtime
-- TODO diagram
-
+- Graphical representation of different types of happens before
+  - ![image missing](./images/conc_mem_ord/happens_before_subtypes.drawio.png "Different types of happens before.")
+  - After C++26 this is going to be simplified to the following
+  - ![image missing](./images/conc_mem_ord/happens_before_cpp26.drawio.png "Simplified types of happens before.")
 
 ## Memory ordering semantics
 - What is memory consistency
@@ -1244,7 +1248,7 @@ Hardware memory models and their cost on performance
 1. Specifying the absence of "out of thin air" results - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3710.html
 1. Out-of-thin-air, revisited, again - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1217r2.html
 1. Is the order of a side effect in the modification order determined by when the side effect is produced? - https://stackoverflow.com/questions/79003017/is-the-order-of-a-side-effect-in-the-modification-order-determined-by-when-the-s
-1. 
+1. Defang and deprecate memory_order::consume - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3475r2.pdf
 1. 
 1. 
 1. 
