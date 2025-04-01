@@ -774,7 +774,6 @@
         - Because the variables are non shared there is no way to check on their actual ordering
         - The non shared variable operations are allowed to be reordered between the total ordered shared variable operations
         - This explain why in C++ default std::atomics, the total ordering only applies to the set of atomic variables
-        - TODO - still validate
     - The operations of any processor in this interleaving should be executed as if in source code order
       - All processors should get to see all memory operations from all processors in program order
       - All types of memory operation swapping are disallowed (W->W, R->R, R->W, W->R orderings have to be maintained)
@@ -791,7 +790,7 @@
         - If A is a `memory_order_seq_cst` operation and B *happens before* a `memory_order_seq_cst` fence Z then A is placed before Z
         - If a `memory_order_seq_cst` fence Z *happens before* A and B is a `memory_order_seq_cst` operation then Z is placed before B
         - If a `memory_order_seq_cst` fence Z1 *happens before* A and B *happens before* a `memory_order_seq_cst` fence Z2 then Z1 is placed before Z2
-        - TODO - add diagrams for these
+    - ![image missing](./images/conc_mem_ord/cpp20_sc_total_order.drawio.png "Total ordering of SC operations.")
     - Only operations and fences with `memory_order_seq_cst` find a place in the total ordering
   - Additional guarantees and corollaries due to a total ordering
     - Every atomic variable's operations in the total order of all atomic operations follow that variable's modification order
@@ -1178,7 +1177,7 @@ Hardware memory models and their cost on performance
 - How does volatile fit in?
   - https://en.cppreference.com/w/cpp/atomic/memory_order#Relationship_with_volatile 
 - How is total ordering on atomic variables defined?
-
+- Understand relevance of fences - https://stackoverflow.com/questions/59316262/when-is-a-memory-order-seq-cst-fence-useful 
 
 
 ### References:
