@@ -846,12 +846,28 @@
       - Most hardware either supports SC-DRF by default or is aiming to support it in the future
   - Problems in mixing operations with `memory_order_seq_cst` with lesser memory orderings
     - Such code can occur when developers start with `memory_order_seq_cst` operations and selectively weaken some operations for performance
-    - Mixing `memory_order_seq_cst` operations with weaker orderings compromises the uniform sequential consistency semantics of the code
+    - Mixing `memory_order_seq_cst` operations with weaker orderings on the same atomic, compromises the uniform sequential consistency semantics of the code
     - Some execution orderings that seem counter intuitive end up becoming possible because of the weakened operations
-    - TODO - example of https://stackoverflow.com/questions/70554277/what-is-the-significance-of-strongly-happens-before-compared-to-simply-happ
-      - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0668r5.html
-      - https://stackoverflow.com/questions/76616852/how-to-understand-sequentially-consistent-and-happen-before
-  - TODO - add diagram 
+    - ```cpp
+      // Thread 1:
+      x.store(1, std::memory_order_seq_cst); // A
+      y.store(1, std::memory_order_release); // B
+
+      // Thread 2:
+      r1 = y.fetch_add(1, std::memory_order_seq_cst); // C (r1 == 1)
+      r2 = y.load(std::memory_order_relaxed); // D (r2 == 3)
+
+      // Thread 3:
+      y.store(3, std::memory_order_seq_cst); // E
+      r3 = x.load(std::memory_order_seq_cst); // F (r3 == 0)
+      ```
+    - ![image missing](./images/conc_mem_ord/mixed_memory_orders.drawio.png "Mixing Seq cst and lesser mem orders.")
+      - It might appear that **(a)** *happens before* **(c)** and so **(a)** should be total ordered before **(c)**
+      - But the release synchronization offered by **(b)** is not strong enough to make **(a)** visible across all threads
+      - Release synchronization is strong enough only to make **(a)** visible to the thread running the acquire operation
+      - So **(f)** may not be able to see the write done by **(a)** even though it is later in the SC order **c-e-f**
+      - So **(f)** may end having a *reads before* relation with **(a)** and be total ordered before **(a)**
+      - Such subtle ordering nuances are counter intuitive and difficult to identify
 - Release/Acquire
   - This memory ordering model is weaker than sequential consistency and allows more operation reordering freedom
     - Expectation of all threads observing the same ordering of shared memory operations does not hold in this case
