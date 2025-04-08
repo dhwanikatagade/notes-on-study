@@ -892,18 +892,32 @@
     - ![image missing](./images/conc_mem_ord/barrier-types-acq-rel.png "Memory barriers and release acquire semantics")
       - Release/Acquire maintains **Write->Write and Read->Write** operation orderings with respect to a write release operation
       - Release/Acquire maintains **Read->Read and Read->Write** operation orderings with respect to a read acquire operation
+      - ![image missing](./images/conc_mem_ord/acquire_release_oneway_barriers.png "Acquire release one way barriers")
+      - With these pairs of barriers Acquire and Release act as one way barriers
       - It leaves out the Write->Read reordering restriction which is included in sequential consistency
         - This allows an atomic release operation to be reordered with a subsequent atomic acquire operation
         - The Write->Read (#StoreLoad) barrier is a more restrictive barrier and hence more costly on performance
         - Leaving out #StoreLoad barrier allows *Independent Reads of Independent Writes* to be reordered
         - This allows two readers to see the same pair of stores to appear in different orders
-      - On multi-copy-atomic machines like x86 this problem is not manifest but can be seen on ARM/POWER which are not
+      - On multi-copy-atomic machines like x86, where a total store order is followed, this problem is not manifest
+      - This problem can be seen on ARM/POWER which are not multi-copy-atomic machines
     - On multi-copy-atomic machines no special CPU instructions are emitted as the hardware enforces release/acquire semantics
       - Using release/acquire on these machines still prevents compiler optimisations that would otherwise break the semantics
     - On weakly ordered machines special CPU instructions are emitted to maintain the semantics
     - The three barriers prevent reordering of an acquire followed by release but not of a release followed by an acquire
-      - Hence the critical section is placed between an acquire and a release leaving other re-orderings free for optimisation
-      - TODO - a diagram here will be helpful
+      - ![image missing](./images/conc_mem_ord/release_acquire_reordering.drawio.png "Reordering of release and acquire")
+      - The operations between **(a)** and **(b)** cannot be reordered outside the **(a)** and **(b)** operation boundaries
+      - The placed barriers prevent loads and stores from moving across the load of **(a)** and the store of **(b)**
+      - Operations from beyond **(a)** and **(b)** can move into the section between these operations
+        - Loads and stores from after **(b)** can get reordered before **(b)** as there is no barrier between them
+        - Loads and stores from before **(a)** can get reordered after **(a)** as there is no barrier between them
+        - These barriers don't prevent StoreLoad reordering so as a result
+          - Loads from after **(b)** can also get reordered before stores from before the barrier
+          - Stores from before **(a)** can also get reordered after loads from after the barrier
+          - A subsequent acquire **(c)** can itself be reordered before the release **(b)**
+          - The subsequent acquire **(c)** can also get reordered before a store before the barrier
+    - These reordering relaxations do not affect the release/acquire semantics
+      - The only requirement is for operations before a release to be visible to operations after an acquire that sees it
   - Uses of Release/Acquire semantics
     - This is used in multi threaded lock free programming for ensuring one way data visibility between two threads
       - Not every use case needs the universal total ordering of sequential consistency
