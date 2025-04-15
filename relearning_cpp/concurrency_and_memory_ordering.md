@@ -914,8 +914,12 @@
         - These barriers don't prevent StoreLoad reordering so as a result
           - Loads from after **(b)** can also get reordered before stores from before the barrier
           - Stores from before **(a)** can also get reordered after loads from after the barrier
-          - A subsequent acquire **(c)** can itself be reordered before the release **(b)**
-          - The subsequent acquire **(c)** can also get reordered before a store before the barrier
+          - Theoretically a subsequent acquire **(c)** can itself be reordered before the release **(b)**
+          - Theoretically the subsequent acquire **(c)** can also get reordered before a store before the barrier of **(b)**
+          - In practice compilers avoid reordering a release followed by an acquire under certain circumstances
+            - If the release and acquire are on the same atomic variable then single threaded ordering has to be maintained
+            - If a reordering is likely to cause violation of forward progress requirements of the standard
+          - If there are no reasons to avoid it, then the release and subsequent acquire may get reordered
     - These reordering relaxations do not affect the release/acquire semantics
       - The only requirement is for operations before a release to be visible to operations after an acquire that sees it
   - Uses of Release/Acquire semantics
@@ -927,7 +931,6 @@
     - Release and Acquire semantics are used in both release operations and release fences
       - The ordering restrictions in both cases are slightly different
       - Release/Acquire fences enforce more restrictions than Release/Acquire operations
-      - TODO - some diagram from Preshing might be good here
     - Release/Acquire semantics can be used to implement mutex lock
       - When there is a set of shared variables that need to be used atomically we do need a mutex lock
         - The set of shared variables can be allowed to be non atomic and hence be better for performance
@@ -1253,6 +1256,9 @@ Hardware memory models and their cost on performance
 1. Memory Barriers Are Like Source Control Operations - https://preshing.com/20120710/memory-barriers-are-like-source-control-operations/
 1. Acquire and Release Fences - https://preshing.com/20130922/acquire-and-release-fences/
 1. Acquire and Release Fences Don't Work the Way You'd Expect - https://preshing.com/20131125/acquire-and-release-fences-dont-work-the-way-youd-expect/
+1. Can Reordering of Release/Acquire Operations Introduce Deadlock? - https://preshing.com/20170612/can-reordering-of-release-acquire-operations-introduce-deadlock/
+1. Reorder relaxed atomic operations on the same object - https://stackoverflow.com/questions/77075896/reorder-relaxed-atomic-operations-on-the-same-object
+1. Can Acquire load to atomic be reordered before Release store to unrelated atomic? - https://users.rust-lang.org/t/can-acquire-load-to-atomic-be-reordered-before-release-store-to-unrelated-atomic/104411
 1. Fences - https://eel.is/c++draft/atomics.fences
 1. Memory consistency models - https://ocw.uc3m.es/pluginfile.php/3488/mod_page/content/14/slides_memory_consistency5.pdf
 1. Memory Consistency - https://gfxcourses.stanford.edu/cs149/winter19content/lectures/09_consistency/09_consistency_slides.pdf
