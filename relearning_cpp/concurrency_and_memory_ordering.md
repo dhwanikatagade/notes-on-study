@@ -507,7 +507,7 @@
     - Load operations before the barrier will not be reordered with load operations after the barrier
     - This guarantees that loads after the barrier will not read values that are older than the ones read before the barrier
       - This does not mean that either of the loads will read the latest value
-      - It just guarantees the ones read after will be at least as fresh as the ones read before
+      - It just guarantees the values read after will be at least as fresh as the values read before
       - It guarantees that the source code ordering of operations within one thread is maintained across the barrier
   - StoreStore barrier
     - This ensures ordering of memory store operations
@@ -547,9 +547,11 @@
       - This involves two way deep syncing of this thread's stores as well as stores of other threads for the subsequent load
       - This is represented in the diagrams with the two circular arrows
 - Types of memory fences
-  - Fences help in achieving cross thread synchronization using lighter than sequential consistency atomic operations
-    - Atomic fences can be used to achieve visibility guarantees across other relaxed atomic operations
+  - Fences help in achieving cross thread visibility guarantees while using relaxed atomic operations
+    - SC atomic fences can be used to achieve sequential consistency across other relaxed atomic operations
     - These tend to be less restrictive for concurrency compared to sequentially consistent atomic operations
+    - Correctly used fences can provide just the right amount of required concurrency restriction in the right place
+    - The function `std::atomic_thread_fence(std::memory_order)` serves as a fence in C++
   - Fences map onto the functionality of one or more barriers
   - ![image missing](./images/conc_mem_ord/barrier-types-fence.png "Memory barriers and fences mapping.")
   - Release fence
@@ -560,17 +562,22 @@
     - Works as a combination of LoadLoad + LoadStore barriers
   - Release and acquire fences are different from release and acquire operations with significantly differing semantics
     - A fence operation is neither a load nor a store to be a release or acquire operation
-  - ![image missing](./images/conc_mem_ord/two-cones-fences.png "Synchronization with release/acquire fences.")
-    - The following is one approach to understand the synchronization that is achieved
-    - Operations in the red cone in Thread 1 are persisted to higher visibility storage by the release fence
-      - This is like a one way deep sync push of writes from Thread 1's side
-    - The subsequent store operation is completed by Thread 1
-    - The store takes it's own time to propagate and become visible to Thread 2
-    - When the store is read by Thread 2 the subsequent acquire fence synchronizes with the release fence
-      - This is like the corresponding one way deep sync pull from Thread 2's side
-    - This guarantees that the operations in the red cone in Thread 2 have the visibility of operations in the red cone in Thread 1
-      - If Thread 2 has read the value written by Thread 1 then a deep pull on Thread 2 will get all values deep pushed by Thread 1 before it did the write
-
+    - ![image missing](./images/conc_mem_ord/two-cones-fences.png "Synchronization with release/acquire fences.")
+      - The following is one approach to understand the synchronization that is achieved
+      - Operations in the red cone in Thread 1 are persisted to higher visibility storage by the release fence
+        - This is like a one way deep sync push of writes from Thread 1's side
+      - The subsequent store operation is completed by Thread 1
+      - The store takes it's own time to propagate and become visible to Thread 2
+      - When the store is read by Thread 2 the subsequent acquire fence synchronizes with the release fence
+        - This is like the corresponding one way deep sync pull from Thread 2's side
+      - This guarantees that the operations in the red cone in Thread 2 have the visibility of operations in the red cone in Thread 1
+        - If Thread 2 has read the value written by Thread 1 then a deep pull on Thread 2 will get all values deep pushed by Thread 1 before it did the write
+  - Fences with other orderings
+    - Fences with `memory_order_acq_rel` act as a release fence as well as an acquire fence
+    - Fences with `memory_order_seq_cst` act as `memory_order_acq_rel` fences and are part of the SC total ordering 
+  - Utility of fences
+    - Sequentially consistent operations give maximum visibility guarantees whether or not all of them are required
+    - Fences allow programmers to start weak with relaxed operations and strengthen visibility guarantees as and where required
 
 ## Different flavours of "happens before"
 - Happens before
@@ -1259,7 +1266,9 @@ Hardware memory models and their cost on performance
 1. Can Reordering of Release/Acquire Operations Introduce Deadlock? - https://preshing.com/20170612/can-reordering-of-release-acquire-operations-introduce-deadlock/
 1. Reorder relaxed atomic operations on the same object - https://stackoverflow.com/questions/77075896/reorder-relaxed-atomic-operations-on-the-same-object
 1. Can Acquire load to atomic be reordered before Release store to unrelated atomic? - https://users.rust-lang.org/t/can-acquire-load-to-atomic-be-reordered-before-release-store-to-unrelated-atomic/104411
+1. Forward progress - https://eel.is/c++draft/intro.progress
 1. Fences - https://eel.is/c++draft/atomics.fences
+1. std::atomic_thread_fence - https://en.cppreference.com/w/cpp/atomic/atomic_thread_fence
 1. Memory consistency models - https://ocw.uc3m.es/pluginfile.php/3488/mod_page/content/14/slides_memory_consistency5.pdf
 1. Memory Consistency - https://gfxcourses.stanford.edu/cs149/winter19content/lectures/09_consistency/09_consistency_slides.pdf
 1. Sequential Consistency - https://www.modernescpp.com/index.php/sequential-consistency/
