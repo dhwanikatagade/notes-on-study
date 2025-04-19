@@ -939,12 +939,16 @@
       - The ordering restrictions in both cases are slightly different
       - Release/Acquire fences enforce more restrictions than Release/Acquire operations
     - Release/Acquire semantics can be used to implement mutex lock
-      - When there is a set of shared variables that need to be used atomically we do need a mutex lock
-        - The set of shared variables can be allowed to be non atomic and hence be better for performance
+      - When there is a set of shared variables that needs to be used atomically we do need a mutex lock
+        - The set of shared variables can be allowed to be non atomic and hence be better for performance and simplicity
       - Acquire lock and release lock can be seen as acquiring and releasing exclusive access to shared variables
       - Changes are made to shared variables by the thread that holds the lock and the lock is released after changes are done
-      - The ordering guarantees of an acquire followed by a release ensure that operations in the critical section are not reordered out of it
-      - Also the changes to the critical section shared variables are guaranteed to be visible to the next critical section that acquires the lock
+      - ![image missing](./images/conc_mem_ord/mutex_acquire_release.drawio.png "Mutex operations acquire and release")
+        - The critical section is placed between a lock acquire and a lock release
+        - The ordering guarantees of an acquire followed by a release ensure that operations in the critical section are not reordered out of it
+        - This ensures that the shared variable set is modified by a thread only when the lock is held by it
+        - The other operation re-orderings are available for optimisation
+        - Also the changes to the critical section shared variables are guaranteed to be visible to the next critical section that acquires the lock
 - Release/Consume
   - This model is similar to Release/Acquire but is more relaxed in its memory ordering requirements
     - The operations before a release store are made visible to the operations after the consume load that depend on the loaded value
@@ -1239,6 +1243,8 @@ Hardware memory models and their cost on performance
 1. Undefined behavior in c/c++: i++ + ++i vs ++i + i++ - https://stackoverflow.com/questions/39900469/undefined-behavior-in-c-c-i-i-vs-i-i
 1. With memory_order_relaxed how is total order of modification of an atomic variable assured on typical architectures? - https://stackoverflow.com/questions/58827774/with-memory-order-relaxed-how-is-total-order-of-modification-of-an-atomic-variab
 1. What is guaranteed with C++ std::atomic at the programmer level - https://stackoverflow.com/questions/59999996/what-is-guaranteed-with-c-stdatomic-at-the-programmer-level
+1. What is the performance of std::atomic vs non-atomic variables? - https://stackoverflow.com/questions/51846894/what-is-the-performance-of-stdatomic-vs-non-atomic-variables
+1. Atomic vs. Non-Atomic Operations - https://preshing.com/20130618/atomic-vs-non-atomic-operations/
 1. The Synchronizes-With Relation - https://preshing.com/20130823/the-synchronizes-with-relation/
 1. What does "release sequence" mean? - https://stackoverflow.com/questions/38565650/what-does-release-sequence-mean
 1. Weaken Release Sequences - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0982r1.html
