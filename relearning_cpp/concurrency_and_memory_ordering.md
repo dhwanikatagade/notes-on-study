@@ -212,15 +212,16 @@
     - Atomic fences
       - Atomic fences with release and acquire semantics also establish *synchronizes with* relations
       - A release fence A on thread TA *synchronizes with* an acquire fence B on thread TB
-        - If an atomic read operation before B in TB reads a value written by an atomic write operation X after A in TA
-        - If there is a chain of atomic read-modify-write operations headed by X, one of whose value is read by B in TB
+        - If an atomic read operation D before B in TB reads a value written by an atomic write operation C after A in TA
+        - If there is a chain of atomic read-modify-write operations headed by C, one of whose value is read by D in TB
       - A release fence A on thread TA *synchronizes with* a read acquire operation B on thread TB
-        - If B in TB reads a value written by an atomic write operation X after A in TA
-        - If there is a chain of atomic read-modify-write operations headed by X, one of whose value is read by B in TB
+        - If B in TB reads a value written by an atomic write operation C after A in TA
+        - If there is a chain of atomic read-modify-write operations headed by C, one of whose value is read by B in TB
       - A write release operation A on thread TA *synchronizes with* an acquire fence B on thread TB
-        - If an atomic read operation before B in TB reads a value written by A or it's release sequence
-    - Thread and mutex operations unconditionally establish *synchronizes with* relations
-    - Atomic operations and fences conditionally establish *synchronizes with* relations
+        - If an atomic read operation D before B in TB reads a value written by A or it's release sequence
+      - ![image missing](./images/conc_mem_ord/fence_synchronises_with.drawio.png "Synchronizes with using fences.")
+    - Thread operations unconditionally establish *synchronizes with* relations
+    - Atomic operations, fences and mutexes conditionally establish *synchronizes with* relations
 - Release sequence
   - Release sequence is relevant in the case of release/acquire synchronization on an atomic variable
     - There are scenarios where an earlier store release would need to synchronize with a much later load acquire
