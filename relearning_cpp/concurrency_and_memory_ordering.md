@@ -22,11 +22,11 @@
         - This is under the assumption that no second thread peaks into the actual execution of the thread
         - The net result of the thread should be the same as if executed in source code order
         - Shared variable operations within a thread give effect to cross thread peaking
-        - The reordering permitted under as-if rule happens wherever it cannot be detected
+        - The reordering permitted under as-if rule happens wherever it doesn't effect the ultimate outcome
       - Multithreaded execution is some sequentially consistent interleaving of the multiple threads of execution
       - The requirements to maintain these illusions are collectively called the as-if rule
       - All restrictions of the as-if rule are applicable only to valid programs with no UB
-        - Non atomic shared variables should not have data races otherwise the program has UB and as-if rules ar off
+        - Non atomic shared variables should not have data races otherwise the program has UB and as-if rules are off
         - Atomic shared variables do not cause UB but their purpose is to enable reads from cross thread writes
           - In this case as well the as-if behaviour of a single thread of executions does not hold
       - Also the as-if rule is relaxed for copy/move elision
@@ -579,6 +579,8 @@
   - Utility of fences
     - Sequentially consistent operations give maximum visibility guarantees whether or not all of them are required
     - Fences allow programmers to start weak with relaxed operations and strengthen visibility guarantees as and where required
+    - Since C++20 `memory_order_seq_cst` fences placed between `memory_order_relaxed` operations restore sequential consistency
+
 
 ## Different flavours of "happens before"
 - Happens before
@@ -701,7 +703,7 @@
     - A total ordering exists between all writes to one atomic variable M
     - This relation conceptually places some of the reads also along the line of total ordering driven by the coherence rules
   - It is used along with *strongly happens before* to define the total ordering of sequentially consistent atomic operations across all atomic variables
-    - The position of an operation that *strongly happens before* another is fixed in the total ordering
+    - The relative position of an operation that *strongly happens before* another is fixed in the total ordering
     - The remaining operations find their position based on incidental *coherence ordered before* relations
   - Atomic operation A is *coherence ordered before* atomic operation B
     - If A is a write operation and B is a read operation and B reads the value written by A
@@ -1121,7 +1123,9 @@
   - The allocations can be made on neighbouring bytes if access is made to individual bytes
   - If single byte access is not supported on the hardware then padding needs to be introduced between objects
   - Compilers and hardware can still do optimisations that maintain the as-if rule
-Hardware memory models and their cost on performance
+
+
+## Hardware memory models and their cost on performance
 - Expectations from cost of synchronisation
   - In typical executions there are many more Loads than Stores
   - It's ok if Stores have synchronisation overhead 
@@ -1134,10 +1138,14 @@ Hardware memory models and their cost on performance
     - Does not reorder Stores with Stores
     - Does not reorder Stores with earlier Loads
     - Loads may be reordered with earlier Stores to different locations
+  - This provides the ordering guarantees of total store ordering (TSO)
+    - All other operation orderings are maintained except StoreLoad ordering
+    - StoreLoad ordering is compromised because of the presence of a store buffer
+    - The value read by a load may not be the last store done on the location due to bye passing
   - Provides more guarantees than generally needed
   - SC Loads, normal Loads and normal Stores are same - `mov`
     - Even normal Loads are not light weight
-  - SC Stores are bus (TODO) locked instructions and a full barrier - `xchg`
+  - SC Stores are bus locked instructions and a full barrier - `xchg`
 - Intel Itanium
   - Normal Loads and Stores are are lighter operations - `ld` and `st`
   - SC Loads are specialised acquire operations - `ld.acq`
@@ -1198,31 +1206,24 @@ Hardware memory models and their cost on performance
     - There is no subsequent action after the increment that needs to synchronise with it
     - It is fine if the increments eventually get applied in any order
 
+## How does volatile affect operation reordering
+TODO
+- https://en.cppreference.com/w/cpp/atomic/memory_order#Relationship_with_volatile
+- https://stackoverflow.com/questions/8819095/concurrency-atomic-and-volatile-in-c11-memory-model
+- https://stackoverflow.com/questions/4557979/when-to-use-volatile-with-multi-threading/
+- https://studiofreya.com/cpp/volatile-and-atomic-variables-in-cpp/ 
+- https://www.kernel.org/doc/Documentation/process/volatile-considered-harmful.rst 
+- Also search how volatile is insufficient on modern multi core hardware
+
+
 ## TODO Concept notes
-  - Compiler and processor juggle the operations around for optimal throughput
-  - All memory operations that have been reordered ultimately fall in their right place
-  - For a single thread’s execution this is managed by the compiler and processor
-  - They manage to make changes visible to parts of the code with the right timing
-  - When one thread gets to take a peek at another threads execution through shared variables, the juggling of operations tends to become visible
   - Synchronisation primitives are a way of telling the compiler and processor to manage the change visibility timing across some additional cross thread boundaries in addition to the single thread boundaries that it already manages
   - The compiler and processor continue their operation juggling while managing these memory change visibility timings
-- Is acq-rel similar to full barrier ? 
-- Difference between acq-rel and seq-cst?
-- What are synchronising operations?
 - What about cache coherence today?
   - https://en.wikipedia.org/wiki/Memory_coherence
   - https://www.researchgate.net/profile/Mark-Hill-17/publication/220696265_A_Primer_on_Memory_Consistency_and_Cache_Coherence/links/0fcfd511d6bdd63d0f000000/A-Primer-on-Memory-Consistency-and-Cache-Coherence.pdf
   - https://gfxcourses.stanford.edu/cs149/winter19content/lectures/09_consistency/09_consistency_slides.pdf
   - https://www.inf.ed.ac.uk/teaching/courses/pa/Notes/lecture07-sc.pdf
-- Does memory ordering restrict reordering of memory operations or all operations?
-- What is this problem?
-  - semantics of SC fences does not recover sequential consistency, even when SC fences are placed between every two commands in programs with only release/acquire atomic accesses
-- Which value can be read by any atomic read operation?
-  - The value of an atomic object M, as determined by evaluation B, is the value stored by some unspecified side effect A that modifies M, where B does not happen before A. The set of such side effects is also restricted by the rest of the rules described here, and in particular, by the coherence requirements below.
-- How does volatile fit in?
-  - https://en.cppreference.com/w/cpp/atomic/memory_order#Relationship_with_volatile 
-- How is total ordering on atomic variables defined?
-- Understand relevance of fences - https://stackoverflow.com/questions/59316262/when-is-a-memory-order-seq-cst-fence-useful 
 
 
 ### References:
@@ -1300,7 +1301,7 @@ Hardware memory models and their cost on performance
 1. Out-of-thin-air, revisited, again - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1217r2.html
 1. Is the order of a side effect in the modification order determined by when the side effect is produced? - https://stackoverflow.com/questions/79003017/is-the-order-of-a-side-effect-in-the-modification-order-determined-by-when-the-s
 1. Defang and deprecate memory_order::consume - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3475r2.pdf
-1. 
+1. an introduction to sequential consistency and total store order - https://techblog.lycorp.co.jp/en/20231216a
 1. 
 1. 
 1. 
