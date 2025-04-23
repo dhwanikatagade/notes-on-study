@@ -1206,14 +1206,19 @@
     - There is no subsequent action after the increment that needs to synchronise with it
     - It is fine if the increments eventually get applied in any order
 
+
 ## How does volatile affect operation reordering
-TODO
-- https://en.cppreference.com/w/cpp/atomic/memory_order#Relationship_with_volatile
-- https://stackoverflow.com/questions/8819095/concurrency-atomic-and-volatile-in-c11-memory-model
-- https://stackoverflow.com/questions/4557979/when-to-use-volatile-with-multi-threading/
-- https://studiofreya.com/cpp/volatile-and-atomic-variables-in-cpp/ 
-- https://www.kernel.org/doc/Documentation/process/volatile-considered-harmful.rst 
-- Also search how volatile is insufficient on modern multi core hardware
+- The volatile keyword prevents certain compiler optimisations if the variable is modified by out of band means
+  - Volatile access is considered as an externally observable side effect
+  - It prevents elimination of an access in the absence of in thread modification
+  - It prevents reordering of the access with other externally observable side effects in the same thread
+  - It was intended for use in hardware programming and systems programming where these restrictions are relevant
+  - Volatile should be used only in the context of single threaded ordering of memory mapped I/O
+- But it does not ensure any cross thread ordering guarantees nor any atomicity of write or read
+- It also does not prevent any reordering with other operations that are non visible side effects
+  - It does not introduce any hardware barriers in the object code
+  - Single threaded hardware execution can still reorder the operations in ways that are unobservable
+  - Because of this volatile is not useful for concurrent programming on modern multicore processors
 
 
 ## TODO Concept notes
@@ -1302,8 +1307,8 @@ TODO
 1. Is the order of a side effect in the modification order determined by when the side effect is produced? - https://stackoverflow.com/questions/79003017/is-the-order-of-a-side-effect-in-the-modification-order-determined-by-when-the-s
 1. Defang and deprecate memory_order::consume - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3475r2.pdf
 1. an introduction to sequential consistency and total store order - https://techblog.lycorp.co.jp/en/20231216a
-1. 
-1. 
+1. When to use volatile with multi threading? - https://stackoverflow.com/questions/4557979/when-to-use-volatile-with-multi-threading/
+1. Why the "volatile" type class should not be used - https://www.kernel.org/doc/Documentation/process/volatile-considered-harmful.rst
 1. 
 1. 
 1. 
