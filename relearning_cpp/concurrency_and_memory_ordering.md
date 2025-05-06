@@ -65,6 +65,9 @@
   - The programmer needs to tell the compiler to prevent unwanted reordering of shared memory access by using mutexes and atomics
     - Any synchronisation puts restrictions on and works against the useful optimisations done by the processor
     - We should use minimal restrictions to express the required correctness semantics
+    - The compiler and processor manage memory change visibility timing within a single thread automatically
+    - Synchronisation primitives are a way of telling the compiler and processor to manage the change visibility timing across some additional cross thread boundaries
+    - The compiler and processor continue their operation juggling while managing these memory change visibility timings
   - Debugger view concept to understand data race and re-orderings
     - Threads will run their code any way they like and we don't get to know because the sequential consistency illusion is maintained
     - Only when a debugger is running and watching the threads execution we get to observe the seemingly weird code modifications done by the thread
@@ -1221,20 +1224,69 @@
   - Because of this volatile is not useful for concurrent programming on modern multicore processors
 
 
-## TODO Concept notes
-  - Synchronisation primitives are a way of telling the compiler and processor to manage the change visibility timing across some additional cross thread boundaries in addition to the single thread boundaries that it already manages
-  - The compiler and processor continue their operation juggling while managing these memory change visibility timings
-- What about cache coherence today?
-  - https://en.wikipedia.org/wiki/Memory_coherence
-  - https://www.researchgate.net/profile/Mark-Hill-17/publication/220696265_A_Primer_on_Memory_Consistency_and_Cache_Coherence/links/0fcfd511d6bdd63d0f000000/A-Primer-on-Memory-Consistency-and-Cache-Coherence.pdf
-  - https://gfxcourses.stanford.edu/cs149/winter19content/lectures/09_consistency/09_consistency_slides.pdf
-  - https://www.inf.ed.ac.uk/teaching/courses/pa/Notes/lecture07-sc.pdf
+## Understanding cache coherence
+- Coherence vs Consistency
+  - Coherence
+    - All cores seeing a single view of a memory location even in the presence of a memory hierarchy
+    - If one copy of a single location gets modified then all copies end up seeing the modification
+    - All cores agree on a single order of reads and writes to a single memory location
+    - Coherence is a property of memory that says changes from one core **will** be visible to other cores
+    - Coherence is irrelevant if caches are not present or multiple cores are not present
+  - Consistency
+    - This involves all cores seeing a uniform view of reads and writes to multiple shared locations
+    - The mutual ordering of reads and writes to these locations is of relevance in this uniform view
+    - Deals with when writes to one location propagate to other cores relative to reads and writes to other locations
+    - Consistency is a property of memory that drives **when** the changes to one location will be visible to other cores
+    - Consistency is irrelevant only if multiple cores are not present
+    - Consistency is still relevant if multiple cores are present and caches are not present
+- Requirements for cache coherence
+  - Changes to one copy of the data should be propagated to other copies of the data
+  - Reads and writes to a single memory location should be seen in same order by all cores
+- Mechanisms for cross cache communication
+  - Bus Snooping
+    - This uses a mechanism where each cache read/write transaction is seen by all caches and actions are take accordingly
+    - This tends to be faster but is applicable to small number of caches and doesn't scale well for large number of cores
+    - The address bus acts as a self organiser of the ordering of read/write requests
+      - Only one cache will have its request go through at a time
+      - This makes this system simpler in its implementation
+  - Directory based
+    - The communication between caches is achieved though a separate directory structure
+    - The directory is used to maintain ownership and sharing data of cache lines
+    - The directory system acts as the serializer for read/write requests to a cache line
+    - The messages to maintain coherence are exchanged between specific caches and not broadcast to all
+    - This makes it scalable for systems with large number of cache copies
+- Change propagation policies
+  - Write invalidate
+    - In this method when a write for a cache entry is detected elsewhere the local entry is invalidated
+    - Subsequent reads for that cache entry are performed from the memory when it is re-cached
+  - Write update
+    - In this method the cache controller updates the local cache copy when a modification is detected
+- Cache coherence protocols
+  - These protocols are schemes for maintaining coherence across multiple caches
+  - The cache lines are tagged with a certain state which changes in response to transaction messages
+  - They can potentially be used with snooping based or directory based communication schemes
+  - Most of the following protocols are commonly used with bus snooping
+  - MSI - Uses three states for cache line records
+    - Modified - The line is modified in the cache and needs write back
+    - Shared - The line is not modified and is read only and can potentially be evicted
+    - Invalid - The line is either not present in the cache or has been invalidated due to another request
+  - MOSI - Adds a new state of 'owned'
+    - Owned
+      - The latest value of this line is held by this cache and main memory may not be up to date
+      - The line is owned by this cache and this cache will serve requests for the line
+  - MESI - Adds the new state of 'exclusive'
+    - Exclusive
+      - The line is present only in this cache and matches the main memory
+  - MOESI - Includes both 'owned' and 'exclusive' states
+  - DASH - A protocol specifically for directory based communication
+
 
 
 ### References:
 
 1. C++ and Beyond 2012: Herb Sutter - atomic Weapons - https://www.youtube.com/watch?v=A8eCGOqgvH4, https://www.youtube.com/watch?v=KeLBd2EJLOU
 1. Cache coherence - https://en.wikipedia.org/wiki/Cache_coherence
+1. Directory-based coherence - https://en.wikipedia.org/wiki/Directory-based_coherence
 1. What exactly is a 'side-effect' in C++? - https://stackoverflow.com/questions/9563600/what-exactly-is-a-side-effect-in-c
 1. Multi-threaded executions and data races - https://eel.is/c++draft/intro.multithread
 1. Sequential execution - https://eel.is/c++draft/intro.execution
