@@ -1137,6 +1137,8 @@
   - But Loads have to be low on synchronisation overhead
 - Intel x86/x64
   - The strongest memory model among all hardware
+    - Loads are acquire by default
+    - Stores are release by default
     - Does not reorder Loads with Loads
     - Does not reorder Stores with Stores
     - Does not reorder Stores with earlier Loads
@@ -1361,22 +1363,3 @@
 1. an introduction to sequential consistency and total store order - https://techblog.lycorp.co.jp/en/20231216a
 1. When to use volatile with multi threading? - https://stackoverflow.com/questions/4557979/when-to-use-volatile-with-multi-threading/
 1. Why the "volatile" type class should not be used - https://www.kernel.org/doc/Documentation/process/volatile-considered-harmful.rst
-1. 
-1. 
-1. 
-1. 
-1. 
-1. 
-
-
-
-https://dev.to/kprotty/understanding-atomics-and-memory-ordering-2mom 
-https://stackoverflow.com/questions/12346487/what-do-each-memory-order-mean 
-https://herbsutter.com/2013/02/11/atomic-weapons-the-c-memory-model-and-modern-hardware/ 
-https://bartoszmilewski.com/2008/12/01/c-atomics-and-memory-ordering/ 
-
-
-Questions for potential answers
-https://stackoverflow.com/questions/76616852/how-to-understand-sequentially-consistent-and-happen-before
-https://stackoverflow.com/questions/78943157/why-is-the-c-standard-definition-of-coherenced-order-before-different-from-t
-https://stackoverflow.com/questions/58986135/what-does-strongly-happens-before-mean
