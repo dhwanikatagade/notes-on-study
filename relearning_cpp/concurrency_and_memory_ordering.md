@@ -1,4 +1,6 @@
-
+---
+layout: default
+---
 # Understanding concurrency and memory ordering
 
 ## The reality of hardware and code execution
@@ -1286,80 +1288,81 @@
 
 ### References:
 
-1. C++ and Beyond 2012: Herb Sutter - atomic Weapons - https://www.youtube.com/watch?v=A8eCGOqgvH4, https://www.youtube.com/watch?v=KeLBd2EJLOU
-1. Cache coherence - https://en.wikipedia.org/wiki/Cache_coherence
-1. Directory-based coherence - https://en.wikipedia.org/wiki/Directory-based_coherence
-1. What exactly is a 'side-effect' in C++? - https://stackoverflow.com/questions/9563600/what-exactly-is-a-side-effect-in-c
-1. Multi-threaded executions and data races - https://eel.is/c++draft/intro.multithread
-1. Sequential execution - https://eel.is/c++draft/intro.execution
-1. Data races - https://eel.is/c++draft/intro.races
-1. Order and consistency - https://eel.is/c++draft/atomics.order
-1. Threads - https://eel.is/c++draft/thread.threads
-1. Mutex requirements - https://eel.is/c++draft/thread.mutex.requirements
-1. Optimizing compiler - https://en.wikipedia.org/wiki/Optimizing_compiler
-1. std::memory_order - https://en.cppreference.com/w/cpp/atomic/memory_order
-1. What are sequence points, and how do they relate to undefined behavior? - https://stackoverflow.com/questions/4176328/what-are-sequence-points-and-how-do-they-relate-to-undefined-behavior
-1. Order of evaluation - https://en.cppreference.com/w/cpp/language/eval_order
-1. Instruction pipelining - https://en.wikipedia.org/wiki/Instruction_pipelining
-1. Undefined behavior in c/c++: i++ + ++i vs ++i + i++ - https://stackoverflow.com/questions/39900469/undefined-behavior-in-c-c-i-i-vs-i-i
-1. With memory_order_relaxed how is total order of modification of an atomic variable assured on typical architectures? - https://stackoverflow.com/questions/58827774/with-memory-order-relaxed-how-is-total-order-of-modification-of-an-atomic-variab
-1. What is guaranteed with C++ std::atomic at the programmer level - https://stackoverflow.com/questions/59999996/what-is-guaranteed-with-c-stdatomic-at-the-programmer-level
-1. What is the performance of std::atomic vs non-atomic variables? - https://stackoverflow.com/questions/51846894/what-is-the-performance-of-stdatomic-vs-non-atomic-variables
-1. Atomic vs. Non-Atomic Operations - https://preshing.com/20130618/atomic-vs-non-atomic-operations/
-1. The Synchronizes-With Relation - https://preshing.com/20130823/the-synchronizes-with-relation/
-1. What does "release sequence" mean? - https://stackoverflow.com/questions/38565650/what-does-release-sequence-mean
-1. Weaken Release Sequences - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0982r1.html
-1. Why release sequence can only contain read-modify-write but not pure write - https://stackoverflow.com/questions/77076002/why-release-sequence-can-only-contain-read-modify-write-but-not-pure-write
-1. The as-if rule - https://en.cppreference.com/w/cpp/language/as_if
-1. What exactly is the "as-if" rule? - https://stackoverflow.com/questions/15718262/what-exactly-is-the-as-if-rule
-1. Talk about memory order in C++ - https://luyuhuang-tech.translate.goog/2022/06/25/cpp-memory-order.html?_x_tr_sl=auto&_x_tr_tl=en
-1. The Happens-Before Relation - https://preshing.com/20130702/the-happens-before-relation/
-1. Revising the C++ memory model - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0668r5.html
-1. What is the significance of 'strongly happens before' compared to '(simply) happens before'? - https://stackoverflow.com/questions/70554277/what-is-the-significance-of-strongly-happens-before-compared-to-simply-happ
-1. What does "strongly happens before" mean? - https://stackoverflow.com/questions/58986135/what-does-strongly-happens-before-mean
-1. Repairing Sequential Consistency in C/C++11 - https://plv.mpi-sws.org/scfix/paper.pdf
-1. C/C++11 mappings to processors - https://www.cl.cam.ac.uk/~pes20/cpp/cpp0xmappings.html
-1. How to understand the changes to sequentially-consistent ordering in C++20? - https://stackoverflow.com/questions/73446334/how-to-understand-the-changes-to-sequentially-consistent-ordering-in-c20
-1. On Fuzzing Concurrent Programs With C++ Atomics - https://escholarship.org/content/qt5rw7n0xs/qt5rw7n0xs_noSplash_05af11de8f9dcecb647440a000b302fe.pdf?t=q8rw3a
-1. Memory Ordering at Compile Time - https://preshing.com/20120625/memory-ordering-at-compile-time/
-1. Is memory fence and memory barrier same? - https://stackoverflow.com/questions/59596654/is-memory-fence-and-memory-barrier-same
-1. LINUX KERNEL MEMORY BARRIERS - https://www.kernel.org/doc/Documentation/memory-barriers.txt
-1. Std::atomic and compiler reordering - https://www.reddit.com/r/cpp_questions/comments/1345hwu/stdatomic_and_compiler_reordering/
-1. C++ Memory Barriers for Atomics - https://stackoverflow.com/questions/8841738/c-memory-barriers-for-atomics
-1. Who ordered memory fences on an x86? - https://bartoszmilewski.com/2008/11/05/who-ordered-memory-fences-on-an-x86/
-1. Memory Barriers Are Like Source Control Operations - https://preshing.com/20120710/memory-barriers-are-like-source-control-operations/
-1. Acquire and Release Fences - https://preshing.com/20130922/acquire-and-release-fences/
-1. Acquire and Release Fences Don't Work the Way You'd Expect - https://preshing.com/20131125/acquire-and-release-fences-dont-work-the-way-youd-expect/
-1. Can Reordering of Release/Acquire Operations Introduce Deadlock? - https://preshing.com/20170612/can-reordering-of-release-acquire-operations-introduce-deadlock/
-1. Reorder relaxed atomic operations on the same object - https://stackoverflow.com/questions/77075896/reorder-relaxed-atomic-operations-on-the-same-object
-1. Can Acquire load to atomic be reordered before Release store to unrelated atomic? - https://users.rust-lang.org/t/can-acquire-load-to-atomic-be-reordered-before-release-store-to-unrelated-atomic/104411
-1. Forward progress - https://eel.is/c++draft/intro.progress
-1. Fences - https://eel.is/c++draft/atomics.fences
-1. std::atomic_thread_fence - https://en.cppreference.com/w/cpp/atomic/atomic_thread_fence
-1. Memory consistency models - https://ocw.uc3m.es/pluginfile.php/3488/mod_page/content/14/slides_memory_consistency5.pdf
-1. Memory Consistency - https://gfxcourses.stanford.edu/cs149/winter19content/lectures/09_consistency/09_consistency_slides.pdf
-1. Sequential Consistency - https://www.modernescpp.com/index.php/sequential-consistency/
-1. Memory Model in C++ : sequential consistency and atomicity - https://stackoverflow.com/questions/38425920/memory-model-in-c-sequential-consistency-and-atomicity
-1. “Strong” and “weak” hardware memory models - https://herbsutter.com/2012/08/02/strong-and-weak-hardware-memory-models/
-1. Consistency model - https://en.wikipedia.org/wiki/Consistency_model
-1. Will two atomic writes to different locations in different threads always be seen in the same order by other threads? - https://stackoverflow.com/questions/27807118/will-two-atomic-writes-to-different-locations-in-different-threads-always-be-see
-1. Can multiple readers synchronize with the same writers with acquire/release ordering? - https://stackoverflow.com/questions/69554728/can-multiple-readers-synchronize-with-the-same-writers-with-acquire-release-orde
-1. Acquire and Release Semantics - https://preshing.com/20120913/acquire-and-release-semantics/
-1. Acquire/Release versus Sequentially Consistent memory order - https://stackoverflow.com/questions/14861822/acquire-release-versus-sequentially-consistent-memory-order
-1. How do "acquire" and "consume" memory orders differ, and when is "consume" preferable? - https://stackoverflow.com/questions/19609964/how-do-acquire-and-consume-memory-orders-differ-and-when-is-consume-prefe
-1. Read-copy-update - https://en.wikipedia.org/wiki/Read-copy-update
-1. The Purpose of memory_order_consume in C++11 - https://preshing.com/20140709/the-purpose-of-memory_order_consume-in-cpp11/
-1. What does memory_order_consume really do? - https://stackoverflow.com/questions/65336409/what-does-memory-order-consume-really-do
-1. C++ Atomics: The Sad Story of memory_order_consume: A Happy Ending At Last? - https://www.youtube.com/watch?v=ZrNQKpOypqU
-1. What does the [[carries_dependency]] attribute mean? - https://stackoverflow.com/questions/6411270/what-does-the-carries-dependency-attribute-mean
-1. Towards Implementation and Use of memory_order_consume - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0098r1.pdf
-1. What formally guarantees that non-atomic variables can't see out-of-thin-air - https://stackoverflow.com/questions/56673990/what-formally-guarantees-that-non-atomic-variables-cant-see-out-of-thin-air-val
-1. Preventing of Out of Thin Air values with a memory barrier in C++ - https://stackoverflow.com/questions/51232730/preventing-of-out-of-thin-air-values-with-a-memory-barrier-in-c
-1. What is value prediction? - https://www.cs.cornell.edu/courses/cs612/2002SP/projects/valuePrediction/project.html
-1. Specifying the absence of "out of thin air" results - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3710.html
-1. Out-of-thin-air, revisited, again - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1217r2.html
-1. Is the order of a side effect in the modification order determined by when the side effect is produced? - https://stackoverflow.com/questions/79003017/is-the-order-of-a-side-effect-in-the-modification-order-determined-by-when-the-s
-1. Defang and deprecate memory_order::consume - https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3475r2.pdf
-1. an introduction to sequential consistency and total store order - https://techblog.lycorp.co.jp/en/20231216a
-1. When to use volatile with multi threading? - https://stackoverflow.com/questions/4557979/when-to-use-volatile-with-multi-threading/
-1. Why the "volatile" type class should not be used - https://www.kernel.org/doc/Documentation/process/volatile-considered-harmful.rst
+1. [C++ and Beyond 2012: Herb Sutter - atomic Weapons - part 1](https://www.youtube.com/watch?v=A8eCGOqgvH4)
+1. [C++ and Beyond 2012: Herb Sutter - atomic Weapons - part 2](https://www.youtube.com/watch?v=KeLBd2EJLOU)
+1. [Cache coherence](https://en.wikipedia.org/wiki/Cache_coherence)
+1. [Directory-based coherence](https://en.wikipedia.org/wiki/Directory-based_coherence)
+1. [What exactly is a 'side-effect' in C++?](https://stackoverflow.com/questions/9563600/what-exactly-is-a-side-effect-in-c)
+1. [Multi-threaded executions and data races](https://eel.is/c++draft/intro.multithread)
+1. [Sequential execution](https://eel.is/c++draft/intro.execution)
+1. [Data races](https://eel.is/c++draft/intro.races)
+1. [Order and consistency](https://eel.is/c++draft/atomics.order)
+1. [Threads](https://eel.is/c++draft/thread.threads)
+1. [Mutex requirements](https://eel.is/c++draft/thread.mutex.requirements)
+1. [Optimizing compiler](https://en.wikipedia.org/wiki/Optimizing_compiler)
+1. [std::memory_order](https://en.cppreference.com/w/cpp/atomic/memory_order)
+1. [What are sequence points, and how do they relate to undefined behavior?](https://stackoverflow.com/questions/4176328/what-are-sequence-points-and-how-do-they-relate-to-undefined-behavior)
+1. [Order of evaluation](https://en.cppreference.com/w/cpp/language/eval_order)
+1. [Instruction pipelining](https://en.wikipedia.org/wiki/Instruction_pipelining)
+1. [Undefined behavior in c/c++: i++ + ++i vs ++i + i++](https://stackoverflow.com/questions/39900469/undefined-behavior-in-c-c-i-i-vs-i-i)
+1. [With memory_order_relaxed how is total order of modification of an atomic variable assured on typical architectures?](https://stackoverflow.com/questions/58827774/with-memory-order-relaxed-how-is-total-order-of-modification-of-an-atomic-variab)
+1. [What is guaranteed with C++ std::atomic at the programmer level](https://stackoverflow.com/questions/59999996/what-is-guaranteed-with-c-stdatomic-at-the-programmer-level)
+1. [What is the performance of std::atomic vs non-atomic variables?](https://stackoverflow.com/questions/51846894/what-is-the-performance-of-stdatomic-vs-non-atomic-variables)
+1. [Atomic vs. Non-Atomic Operations](https://preshing.com/20130618/atomic-vs-non-atomic-operations/)
+1. [The Synchronizes-With Relation](https://preshing.com/20130823/the-synchronizes-with-relation/)
+1. [What does "release sequence" mean?](https://stackoverflow.com/questions/38565650/what-does-release-sequence-mean)
+1. [Weaken Release Sequences](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0982r1.html)
+1. [Why release sequence can only contain read-modify-write but not pure write](https://stackoverflow.com/questions/77076002/why-release-sequence-can-only-contain-read-modify-write-but-not-pure-write)
+1. [The as-if rule](https://en.cppreference.com/w/cpp/language/as_if)
+1. [What exactly is the "as-if" rule?](https://stackoverflow.com/questions/15718262/what-exactly-is-the-as-if-rule)
+1. [Talk about memory order in C++](https://luyuhuang-tech.translate.goog/2022/06/25/cpp-memory-order.html?_x_tr_sl=auto&_x_tr_tl=en)
+1. [The Happens-Before Relation](https://preshing.com/20130702/the-happens-before-relation/)
+1. [Revising the C++ memory model](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0668r5.html)
+1. [What is the significance of 'strongly happens before' compared to '(simply) happens before'?](https://stackoverflow.com/questions/70554277/what-is-the-significance-of-strongly-happens-before-compared-to-simply-happ)
+1. [What does "strongly happens before" mean?](https://stackoverflow.com/questions/58986135/what-does-strongly-happens-before-mean)
+1. [Repairing Sequential Consistency in C/C++11](https://plv.mpi-sws.org/scfix/paper.pdf)
+1. [C/C++11 mappings to processors](https://www.cl.cam.ac.uk/~pes20/cpp/cpp0xmappings.html)
+1. [How to understand the changes to sequentially-consistent ordering in C++20?](https://stackoverflow.com/questions/73446334/how-to-understand-the-changes-to-sequentially-consistent-ordering-in-c20)
+1. [On Fuzzing Concurrent Programs With C++ Atomics](https://escholarship.org/content/qt5rw7n0xs/qt5rw7n0xs_noSplash_05af11de8f9dcecb647440a000b302fe.pdf?t=q8rw3a)
+1. [Memory Ordering at Compile Time](https://preshing.com/20120625/memory-ordering-at-compile-time/)
+1. [Is memory fence and memory barrier same?](https://stackoverflow.com/questions/59596654/is-memory-fence-and-memory-barrier-same)
+1. [LINUX KERNEL MEMORY BARRIERS](https://www.kernel.org/doc/Documentation/memory-barriers.txt)
+1. [Std::atomic and compiler reordering](https://www.reddit.com/r/cpp_questions/comments/1345hwu/stdatomic_and_compiler_reordering/)
+1. [C++ Memory Barriers for Atomics](https://stackoverflow.com/questions/8841738/c-memory-barriers-for-atomics)
+1. [Who ordered memory fences on an x86?](https://bartoszmilewski.com/2008/11/05/who-ordered-memory-fences-on-an-x86/)
+1. [Memory Barriers Are Like Source Control Operations](https://preshing.com/20120710/memory-barriers-are-like-source-control-operations/)
+1. [Acquire and Release Fences](https://preshing.com/20130922/acquire-and-release-fences/)
+1. [Acquire and Release Fences Don't Work the Way You'd Expect](https://preshing.com/20131125/acquire-and-release-fences-dont-work-the-way-youd-expect/)
+1. [Can Reordering of Release/Acquire Operations Introduce Deadlock?](https://preshing.com/20170612/can-reordering-of-release-acquire-operations-introduce-deadlock/)
+1. [Reorder relaxed atomic operations on the same object](https://stackoverflow.com/questions/77075896/reorder-relaxed-atomic-operations-on-the-same-object)
+1. [Can Acquire load to atomic be reordered before Release store to unrelated atomic?](https://users.rust-lang.org/t/can-acquire-load-to-atomic-be-reordered-before-release-store-to-unrelated-atomic/104411)
+1. [Forward progress](https://eel.is/c++draft/intro.progress)
+1. [Fences](https://eel.is/c++draft/atomics.fences)
+1. [std::atomic_thread_fence](https://en.cppreference.com/w/cpp/atomic/atomic_thread_fence)
+1. [Memory consistency models](https://ocw.uc3m.es/pluginfile.php/3488/mod_page/content/14/slides_memory_consistency5.pdf)
+1. [Memory Consistency](https://gfxcourses.stanford.edu/cs149/winter19content/lectures/09_consistency/09_consistency_slides.pdf)
+1. [Sequential Consistency](https://www.modernescpp.com/index.php/sequential-consistency/)
+1. [Memory Model in C++ : sequential consistency and atomicity](https://stackoverflow.com/questions/38425920/memory-model-in-c-sequential-consistency-and-atomicity)
+1. [“Strong” and “weak” hardware memory models](https://herbsutter.com/2012/08/02/strong-and-weak-hardware-memory-models/)
+1. [Consistency model](https://en.wikipedia.org/wiki/Consistency_model)
+1. [Will two atomic writes to different locations in different threads always be seen in the same order by other threads?](https://stackoverflow.com/questions/27807118/will-two-atomic-writes-to-different-locations-in-different-threads-always-be-see)
+1. [Can multiple readers synchronize with the same writers with acquire/release ordering?](https://stackoverflow.com/questions/69554728/can-multiple-readers-synchronize-with-the-same-writers-with-acquire-release-orde)
+1. [Acquire and Release Semantics](https://preshing.com/20120913/acquire-and-release-semantics/)
+1. [Acquire/Release versus Sequentially Consistent memory order](https://stackoverflow.com/questions/14861822/acquire-release-versus-sequentially-consistent-memory-order)
+1. [How do "acquire" and "consume" memory orders differ, and when is "consume" preferable?](https://stackoverflow.com/questions/19609964/how-do-acquire-and-consume-memory-orders-differ-and-when-is-consume-prefe)
+1. [Read-copy-update](https://en.wikipedia.org/wiki/Read-copy-update)
+1. [The Purpose of memory_order_consume in C++11](https://preshing.com/20140709/the-purpose-of-memory_order_consume-in-cpp11/)
+1. [What does memory_order_consume really do?](https://stackoverflow.com/questions/65336409/what-does-memory-order-consume-really-do)
+1. [C++ Atomics: The Sad Story of memory_order_consume: A Happy Ending At Last?](https://www.youtube.com/watch?v=ZrNQKpOypqU)
+1. [What does the [[carries_dependency]] attribute mean?](https://stackoverflow.com/questions/6411270/what-does-the-carries-dependency-attribute-mean)
+1. [Towards Implementation and Use of memory_order_consume](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0098r1.pdf)
+1. [What formally guarantees that non-atomic variables can't see out-of-thin-air](https://stackoverflow.com/questions/56673990/what-formally-guarantees-that-non-atomic-variables-cant-see-out-of-thin-air-val)
+1. [Preventing of Out of Thin Air values with a memory barrier in C++](https://stackoverflow.com/questions/51232730/preventing-of-out-of-thin-air-values-with-a-memory-barrier-in-c)
+1. [What is value prediction?](https://www.cs.cornell.edu/courses/cs612/2002SP/projects/valuePrediction/project.html)
+1. [Specifying the absence of "out of thin air" results](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3710.html)
+1. [Out-of-thin-air, revisited, again](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p1217r2.html)
+1. [Is the order of a side effect in the modification order determined by when the side effect is produced?](https://stackoverflow.com/questions/79003017/is-the-order-of-a-side-effect-in-the-modification-order-determined-by-when-the-s)
+1. [Defang and deprecate memory_order::consume](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2025/p3475r2.pdf)
+1. [an introduction to sequential consistency and total store order](https://techblog.lycorp.co.jp/en/20231216a)
+1. [When to use volatile with multi threading?](https://stackoverflow.com/questions/4557979/when-to-use-volatile-with-multi-threading/)
+1. [Why the "volatile" type class should not be used](https://www.kernel.org/doc/Documentation/process/volatile-considered-harmful.rst)

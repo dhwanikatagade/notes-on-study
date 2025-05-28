@@ -1,0 +1,15 @@
+# Site settings
+# These are used to personalize your new site. If you look in the HTML files,
+# you will see them accessed via {{ site.title }}, {{ site.email }}, and so on.
+# You can create any custom variable you would like, and they will be accessible
+# in the templates via {{ site.myvariable }}.
+
+title: Study Notes
+domain: dhwanikatagade.github.io
+baseurl: /notes-on-study 
+url: https://dhwanikatagade.github.io
+
+# Build settings
+remote_theme: pages-themes/primer@v0.6.0
+plugins:
+  - jekyll-remote-theme
