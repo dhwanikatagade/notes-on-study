@@ -93,6 +93,10 @@ layout: default
     ```
     - Run next line
   - ```bash
+    (gdb) c
+    ```
+    - Continue running till next breakpoint
+  - ```bash
     (gdb) set disassembly-flavor intel
     ```
   - ```bash
