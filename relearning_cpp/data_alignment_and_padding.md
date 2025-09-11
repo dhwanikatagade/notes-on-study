@@ -273,12 +273,25 @@ layout: default
     - This specifier is an option to specify for a type an alignment requirement higher than the fundamental alignment
       - This is useful in cases where a `char` or `std::byte` buffer is used to placement new larger types
       - This is also needed if the fundamental alignment of data is lesser than what is needed by some specialised instructions
-    - ```cpp
-      struct alignas(32) foo_al {
-        char c; // 1 byte force aligned on a 32 byte boundary
-        /* 31 bytes of padding to reach the next 32 byte boundary */
-      }
-      ```
+      - ```cpp
+        struct alignas(32) foo_al {
+          char c; // 1 byte force aligned on a 32 byte boundary
+          /* 31 bytes of padding to reach the next 32 byte boundary */
+        }
+        ```
+    - This specifier can also be used on standalone variables and `struct`/`class` members
+      - ```cpp
+        // static variable declaration - alignas needs to be before static
+        alignas(16) static int static_one = 1;
+
+        // member alignment
+        struct S {
+          alignas(16) char c1;
+          char c2;
+        }
+        ```
+    - It is best to avoid using `alignas` in type aliases created with `typedef` and `using`
+      - The standard specification is uncertain around this so far
   - The alignment aware `operator new`
     - In C++11 and C++14 there was a hole in the way `operator new` allocated memory for types with extended alignment
       - The `operator new` was not required to honour the extended alignment requirement of the type
@@ -563,6 +576,10 @@ layout: default
 1. [Memory alignment : how to use alignof / alignas?](https://stackoverflow.com/questions/17091382/memory-alignment-how-to-use-alignof-alignas)
 1. [Practical use cases for alignof and alignas C++ keywords](https://stackoverflow.com/questions/62489128/practical-use-cases-for-alignof-and-alignas-c-keywords)
 1. [Dynamic memory allocation for over-aligned data](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0035r4.html)
+1. [1437. alignas in alias-declaration](https://cplusplus.github.io/CWG/issues/1437.html)
+1. [Where can I use alignas() in C++11?](https://stackoverflow.com/questions/15788947/where-can-i-use-alignas-in-c11)
+1. [Why does the alignas specifier throw an error on Clang?](https://stackoverflow.com/questions/57826392/why-does-the-alignas-specifier-throw-an-error-on-clang)
+1. [Why doesn't alignas compile when used in a static declaration with clang?](https://stackoverflow.com/questions/42692058/why-doesnt-alignas-compile-when-used-in-a-static-declaration-with-clang)
 1. [The C++17's Alignment Parameter for Operator new()](https://www.cppstories.com/2019/08/newnew-align/)
 1. [Unary expression New](https://eel.is/c++draft/expr.new)
 1. [How to call the overloaded aligned new and delete operators in C++17?](https://stackoverflow.com/questions/53145018/how-to-call-the-overloaded-aligned-new-and-delete-operators-in-c17)
