@@ -22,6 +22,7 @@ layout: default
 * [Notes on static extern and inline modifiers](static_extern_inline_modifiers.md)
 * [Notes on static initialization order problem](static_init_order_problem.md)
 * [Notes on data alignment and padding](data_alignment_and_padding.md)
+* [Notes on aliasing rules and compiler optimisations](aliasing_rules_compiler_optimisations.md)
 * [Notes on concurrency and memory ordering in C++](concurrency_and_memory_ordering.md)
 * [Notes on ELF files and dynamic linking](elf_files_dynamic_linking.md)
 * [Notes on working with core dump files](working_with_core_dump_files.md)
