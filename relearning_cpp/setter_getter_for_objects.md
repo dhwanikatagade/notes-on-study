@@ -155,7 +155,86 @@ layout: default
     - If pointers are to be returned 
       - For owning pointers return smart pointers or RAII managers
       - For observing pointers return `T*`
-
+- Special case of C-style arrays in C++
+  - For historical reasons in C, C++ does not treat C-style arrays as first class objects
+    - C-style arrays in C++ are non-assignable and non-copyable
+    - ```cpp
+      int arr1[] = {1, 2, 3};
+      int arr2[] = {4, 5, 6};
+      int arr3[] = arr1; // this copy initialisation is illegal
+      arr2 = arr1;       // this assignment is illegal
+      ```
+    - Array copying has to be done using functions like `std::memcpy()` or `std::copy()` or through iteration
+    - As a member of a struct, an array becomes copyable and assignable only through the implicitly declared operators
+    - ```cpp
+      struct S {
+        int arr[4]; // C-style array as a member
+        // no explicitly defined copy/assignment operators
+      };
+      S s1{};
+      S s2{};
+      S s3 = s1; // this is legal
+      s2 = s1;   // this is legal
+      ```
+  - The standard dictates the following handling for function parameters and return values of array type
+    - Function parameters of type `T []` are adjusted to be of type `T *` in the function declaration
+    - Function arguments of type `T [N]` or `T []` are temporary materialization converted to `T *`
+    - The array is converted to a pointer to the first element of the array and is called array to pointer decay
+    - Due to decay the `sizeof()` value of the array argument and the parameter end up being different
+    - ```cpp
+      int a[4] = {1, 2, 3, 4};
+      void func(int ap[]) {
+        // arr is int* where as a is int[4]
+        static_assert(sizeof(ap) != sizeof(a));
+      }
+      func(a); // array passed as a parameter decays to a pointer
+      ```
+    - Losing size information to array to pointer decay introduces type safety risks
+      - Technically the type of an array depends on the element type and array size both
+      - ```cpp
+        static_assert(!std::is_same<int[8], float[8]>::value, "distinct element type");
+        static_assert(!std::is_same<int[8],   int[9]>::value, "distinct size");
+        ```
+    - Decay makes it impossible for C-style arrays to be passed to or be returned from a function by value
+    - All C-style array parameter passing or returning happens implicitly by reference and not by value
+  - If C-style array semantics have to be maintained for a function parameter then we have two options
+    - An explicit reference to an array can be passed to a function
+      - ```cpp
+        int arr[4];
+        void func1(int (&x)[4]) {
+          // x is a reference to 4 element array of int
+          static_assert(sizeof(arr) == sizeof(x)); // sizeof also matches
+        }
+        func1(arr); // argument has to match the exact type of parameter
+        ```
+      - A reference to an array `int(&)[4]` is a type different from pointer to first element of the array `int *`
+    - An explicit pointer to an array can be passed to a function
+      - ```cpp
+        int arr[4];
+        void func1(int (*x)[4]) {
+          // x is a pointer to 4 element array of int
+          static_assert(sizeof(arr) == sizeof(*x)); // sizeof also matches
+        }
+        func1(&arr); // argument has to match the exact type of parameter
+        func1(arr); // error - type mismatch. No automatic array to pointer decay
+        ```
+      - A pointer to an array `int(*)[4]` is a type different from pointer to first element of the array `int *`
+  - For idiomatic C++, use of `std::vector` or `std::array` is recommended in place of C-style arrays
+    - `std::vector` is good to use for dynamic size arrays while `std::array` is good for fixed size
+    - These are alternatives with safer access mechanisms for array semantics
+    - Performance wise they incur a small amount of indirection which can mostly be optimised out by the compiler
+    - Functionality wise they provide C-style array access for compatibility with legacy code
+  - Some cases where C-style arrays still have to be honoured in C++
+    - String literals are still `char[]` and will remain so
+    - Using multi-dimensional arrays is notationally simpler with C-style arrays
+    - Its easier to static initialise an array where the size is taken as the size of the initialiser list
+      - ```cpp
+        struct S { int x; double y; };
+        S arr[] = { // arr becomes an array of 2 elements
+          {1,2.2},
+          {3,4.5},
+        };
+        ```
 
 ### References:
 
@@ -177,4 +256,12 @@ layout: default
 1. [Return rvalue reference vs return by value in function return type](https://stackoverflow.com/questions/29332516/return-rvalue-reference-vs-return-by-value-in-function-return-type)
 1. [If I need polymorphism should I use raw pointers instead of unique_ptr?](https://stackoverflow.com/questions/22106912/if-i-need-polymorphism-should-i-use-raw-pointers-instead-of-unique-ptr)
 1. [Is returning by rvalue reference more efficient?](https://stackoverflow.com/questions/1116641/is-returning-by-rvalue-reference-more-efficient)
-
+1. [Passing Arrays to Function in C++](https://stackoverflow.com/questions/14309136/passing-arrays-to-function-in-c)
+1. [C++ Pass a reference to an array to function](https://stackoverflow.com/questions/45220976/c-pass-a-reference-to-an-array-to-function)
+1. [copying C-style arrays and structure](https://stackoverflow.com/questions/62167497/copying-c-style-arrays-and-structure)
+1. [Are C++ arrays copy constructible?](https://stackoverflow.com/questions/17515694/are-c-arrays-copy-constructible)
+1. [In C++, is it possible to initialize an array directly from another?](https://stackoverflow.com/questions/35030275/in-c-is-it-possible-to-initialize-an-array-directly-from-another)
+1. [What is array-to-pointer conversion aka. decay?](https://stackoverflow.com/questions/1461432/what-is-array-to-pointer-conversion-aka-decay)
+1. [Is there ever a valid reason to use C-style arrays in C++?](https://stackoverflow.com/questions/26327176/is-there-ever-a-valid-reason-to-use-c-style-arrays-in-c)
+1. [Now that we have std::array what uses are left for C-style arrays?](https://stackoverflow.com/questions/6111565/now-that-we-have-stdarray-what-uses-are-left-for-c-style-arrays)
+1. [How do I use arrays in C++?](https://stackoverflow.com/questions/4810664/how-do-i-use-arrays-in-c)
