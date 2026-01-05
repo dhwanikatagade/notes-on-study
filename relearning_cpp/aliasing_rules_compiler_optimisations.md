@@ -634,6 +634,7 @@ layout: default
     - But depending on the platform requirement, padding can creep up between `tag` and `data`
   - Common Initial Sequence
     - This is a shared property of a set of structs and is the list of initial layout compatible fields among them
+    - This property applies only to standard layout structs and classes
     - The fields in the common initial sequence have layout-compatible types with same alignment requirements
     - Access to the common initial sequence fields is allowed even from the inactive members of the union
   - The special concession for common initial sequence fields allows us to pull the discriminator tag into the union
