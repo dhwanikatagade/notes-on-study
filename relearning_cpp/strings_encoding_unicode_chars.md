@@ -3,12 +3,17 @@ layout: default
 ---
 # String handling and encodings for unicode characters
 
-
-- char based strings - `char *`, `char[]`, `std::string`
+- Character types in C++
+  - Character types are actually integer types used for a character representation via some encoding
+  - `char`, `signed char` and `unsigned char` are variants of `char`
+  - Depending on the platform, `char` is equivalent to either one of the two, which ever is most efficient
+    - `char` on ARM and PowerPC is typically unsigned, and defaults to signed for x86 and x64
+- `char` based strings are represented by `char *`, `char[]`, `std::string`
   - These are byte sequences which need to be interpreted in some encoding
   - `std::string` internally uses a char array so it is essentially the same
   - The encoding is typically ascii or the system codepage
   - For unicode strings these can have UTF-8 encoding but functions like `length()` will not work as expected
+    - UTF-8 can have multi-byte single characters and `length()` does not account for that
 - Unicode string literals
   - String literals like `"你好"` are a byte sequence in some encoding which is driven by the platform and source code file encoding
 - `wchar_t` - history and issues
@@ -147,4 +152,4 @@ layout: default
 1. [Rules about Strings](https://www.linkedin.com/pulse/c-core-guidelines-rules-strings-rainer-grimm)
 1. [When to use const char * and when to use const char []](https://stackoverflow.com/questions/7903551/when-to-use-const-char-and-when-to-use-const-char)
 1. [Why do arrays in C decay to pointers?](https://stackoverflow.com/questions/33291624/why-do-arrays-in-c-decay-to-pointers)
-
+1. [Character types](https://en.cppreference.com/w/cpp/language/types.html)
