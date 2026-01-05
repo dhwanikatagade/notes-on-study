@@ -73,6 +73,14 @@ layout: default
     ```
     - Add breakpoint at address `0x1234abcd`
   - ```bash
+    (gdb) break 50
+    ```
+    - Add breakpoint at line 50 of current source file
+  - ```bash
+    (gdb) break main.cpp:50
+    ```
+    - Add breakpoint at line 50 of main.cpp file
+  - ```bash
     (gdb) run
     ```
     - Run to next breakpoint 
