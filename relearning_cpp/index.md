@@ -5,7 +5,8 @@ layout: default
 
 * [Notes on string handling and encodings for unicode characters](strings_encoding_unicode_chars.md)
 * [Notes on appropriate way of setting getting objects](setter_getter_for_objects.md)
-* [Notes on Using braced initialization for variables](braced_variable_initialisation.md)
+* [Notes on aggregate types and POD types](aggregate_and_pod_types.md)
+* [Notes on nuances of variable initialization](variable_initialisation_in_cpp.md)
 * [Notes on reference variables in C++](cpp_reference_variables.md)
 * [Notes on rvalue reference and move semantics](rvalue_reference_move_semantics.md)
 * [Notes on expressions and their type](expressions_and_their_types.md)
