@@ -226,6 +226,7 @@ layout: default
     - Till C++03, a POD was first required to be an aggregate, with some additional requirements to make it a POD
       - PODs in C++03 had some useful properties like compatibility with C and support for static initialization
       - PODs had their lifetime not bound by the constructor and destructor calls
+        - C++23 defines this type trait more specifically as `std::is_implicit_lifetime<T>`
       - All these properties are essentially aspects of standard layout and trivial types
     - In C++11, the concept of a POD was split into two distinct properties - *standard layout* and *trivial*
       - A POD was required to be both *standard layout* and *trivial*
@@ -488,6 +489,45 @@ layout: default
     - The term POD implied two mostly orthogonal properties *standard layout* and *trivial*
     - The references of POD in the library and the rest of the standard didn't always require both properties
     - Definitions in the standard were simplified and normalised by referencing more specific traits
+  - What is the C++23 type trait `std::is_implicit_lifetime<T>`?
+    - Implicit lifetime types have one of the properties that was originally attributed to PODs
+      - Their lifetime is not constrained by the constructor and destructor call
+      - The allocation of an object of this type creates and starts the lifetime of this object
+      - ```cpp
+        struct X { int a, b; }; // X is an implicit lifetime type
+        static_assert(std::is_implicit_lifetime_v<X> == true);
+
+        // just calling malloc is enough to create and start the lifetime of *p
+        X *p = static_cast<X*>(std::malloc(sizeof(struct X)));
+        p->a = 1; // these accesses of the object members are not UB
+        p->b = 2; // these accesses of the object members are not UB
+        ```
+        - Generally a placement `new` operation is required after `std::malloc()` to ensure proper lifetime
+    - But unlike PODs, implicit-lifetime types are not recursively implicit-lifetime
+      - An implicit-lifetime type may have base class or non static data member sub-objects that are not implicit-lifetime
+      - ```cpp
+        struct Y { std::string s; };
+        static_assert(std::is_implicit_lifetime_v<Y>);               // Y is implicit-lifetime
+        static_assert(not std::is_implicit_lifetime_v<std::string>); // string is not implicit-lifetime
+
+        Y* p = static_cast<Y*>(std::malloc(sizeof(Y))); // #1
+        std::construct_at(&(p->s));                     // #2
+        p->s = "abc";                                   // #3
+        ```
+        - At #1 `malloc()` for `Y` is enough to start its lifetime at address `p`
+        - After this the access to `&(p->s)` is valid and does not cause undefined behaviour
+        - Even then the lifetime of `p->s` has to be explicitly started using `std::construct_at()` as in #2
+        - In the absence of #2, #3 causes undefined behaviour as the destructor of `std::string` is implicitly called
+        - After #2, execution of #3 is fine
+    - The type trait check `std::is_implicit_lifetime<T>` checks for this property
+    - An implicit-lifetime type is defined as one of the following
+      - The type is a scalar
+      - The type is an implicit lifetime class type defined as
+        - The type is an aggregate whose destructor is not user-provided
+          - This is a stricter requirement than that of an aggregate
+        - The type has at least one trivial eligible constructor and a trivial non-deleted destructor
+      - The type is an array type
+      - The type is a cv-qualified version of these above types
 
 ### References:
 1. [Aggregate](https://en.cppreference.com/w/cpp/language/aggregate_initialization.html)
@@ -509,6 +549,7 @@ layout: default
 1. [What are POD types in C++?](https://stackoverflow.com/questions/146452/what-are-pod-types-in-c)
 1. [C++11 Standard](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2011/n3242.pdf)
 1. [C++20 Standard](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/n4849.pdf)
+1. [C++23 Standard](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2023/n4950.pdf)
 1. [StandardLayoutType](https://en.cppreference.com/w/cpp/named_req/StandardLayoutType.html)
 1. [Standard-layout](https://en.cppreference.com/w/cpp/language/data_members.html#Standard-layout)
 1. [Standard-layout class](https://en.cppreference.com/w/cpp/language/classes.html#Standard-layout_class)
@@ -545,3 +586,7 @@ layout: default
 1. [Eligible special member functions and triviality](https://stackoverflow.com/questions/72540612/eligible-special-member-functions-and-triviality)
 1. [2595. "More constrained" for eligible special member functions](https://cplusplus.github.io/CWG/issues/2595.html)
 1. [Why is std::is_pod deprecated in C++20?](https://stackoverflow.com/questions/48225673/why-is-stdis-pod-deprecated-in-c20)
+1. [ImplicitLifetimeType](https://en.cppreference.com/w/cpp/named_req/ImplicitLifetimeType.html)
+1. [Implicit-lifetime class](https://en.cppreference.com/w/cpp/language/classes.html#Implicit-lifetime_class)
+1. [P0593R6 Implicit creation of objects for low-level object manipulation](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2020/p0593r6.html)
+1. [An aggregate is implicit lifetime? Doesn't seem right](https://stackoverflow.com/questions/75709434/an-aggregate-is-implicit-lifetime-doesnt-seem-right)
