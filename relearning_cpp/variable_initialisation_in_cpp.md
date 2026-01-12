@@ -34,6 +34,7 @@ layout: default
   - Value Initialization
     - This is the type of initialization that happens when empty initializer is provided
     - ```cpp
+      // The ... in below examples represents some parameters and not C++ ellipses
       T(); T{};         // a nameless temporary is init with () or {}
       int(); int{};     // also applicable to basic types
       new T(); new T{}; // a heap object is init with () or {}
@@ -62,6 +63,7 @@ layout: default
   - Direct Initialization
     - This is the type of initialization that happens when constructor is called with actual arguments
     - ```cpp
+      // The ... in below examples represents some parameters and not C++ ellipses
       T obj(ar1, ...);         // named object init with constructor args in ()
       T (ar1, ...);            // nameless temporary init with constructor args in ()
       new T(ar1, ...);         // heap object init with constructor args in ()
@@ -124,6 +126,7 @@ layout: default
         - This may or may not be instantiated depending on the context
     - Direct List Initialization
       - ```cpp
+        // The ... in below examples represents some parameters and not C++ ellipses
         T obj{ar1, ...};         // named object init with constructor args in {}
         T {ar1, ...};            // nameless temporary init with constructor args in {}
         new T{ar1, ...};         // heap object init with constructor args in {}
@@ -136,6 +139,7 @@ layout: default
         ```
     - Copy List Initialization
       - ```cpp
+        // The ... in below examples represents some parameters and not C++ ellipses
         T obj = {ar1, ...};    // named variable init with initializer list in {} after =
 
         void func1(std::initializer_list<int> il) {};
@@ -188,6 +192,7 @@ layout: default
   - Aggregate Initialization
     - This is a special form of list initialization which was around from before C++11 that applies only to aggregate types
     - ```cpp
+      // The ... in below examples represents some parameters and not C++ ellipses
       T obj = {ar1, ...}; // init of aggregate type from initializers in {}
       T obj{ar1, ...};    // init of aggregate type from initializers in {}
       ```
