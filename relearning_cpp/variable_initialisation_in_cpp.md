@@ -44,16 +44,12 @@ layout: default
                         // this same with () gets parsed as a function
       ```
     - Value initialization is done as follows
-      - If the type has a user provided or `delete`ed default constructor or one cannot be provided then
-        - User provided default constructor is considered as user taking control of the initialization
-        - User `delete`ed default constructor is considered as user not wanting any default initialization
-        - Inability to provide an implicit default constructor is seen as user imposed constraints on the type
-        - So in these cases zero initialization is skipped and the object is just default initialized
-      - If the type has an implicitly defined or explicitly `default`ed default constructor then
-        - The object is first zero initialized
-        - If the type has a non-trivial default constructor then the object is additionally default initialized
-        - If the type has a trivial default constructor then additional default initialization is skipped
-        - Trivial construction is considered an unnecessary overhead after zero initialization
+      - For class types overload resolution is performed to pick a default constructor
+        - If the selected default constructor is user-provided then zero initialization is skipped
+          - User provided default constructor is considered as user taking control of the initialization
+        - Otherwise the object is first zero initialized
+        - Next the selected default constructor if any is called
+        - In cases where no default constructor is available value initialization fails
       - For arrays, the elements are individually value initialized
       - For basic types the object is zero initialized
     - The usefulness of value initialization is that it avoids UB due to uninitialized values
@@ -610,7 +606,7 @@ layout: default
 1. [The Knightmare of Initialization in C++](https://quuxplusone.github.io/blog/2019/02/18/knightmare-of-initialization/)
 1. [Is there a difference between copy-initialization and direct-initialization?](https://stackoverflow.com/questions/1051379/is-there-a-difference-between-copy-initialization-and-direct-initialization)
 1. [Why is value-initialization specified as not calling trivial default constructors?](https://stackoverflow.com/questions/63478034/why-is-value-initialization-specified-as-not-calling-trivial-default-constructor)
-
-
-
-TODO - https://stackoverflow.com/questions/29765961/default-value-and-zero-initialization-mess
+1. [Value Initialization](https://eel.is/c++draft/dcl.init.general#9)
+1. [2820. Value-initialization and default constructors](https://cplusplus.github.io/CWG/issues/2820.html)
+1. [2859. Value-initialization with multiple default constructors](https://cplusplus.github.io/CWG/issues/2859.html)
+1. [Default, value and zero initialization mess](https://stackoverflow.com/questions/29765961/default-value-and-zero-initialization-mess)
