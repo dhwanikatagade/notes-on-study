@@ -596,7 +596,7 @@ layout: default
 1. [Effective Modern C++](https://moodle.ufsc.br/pluginfile.php/2377667/mod_resource/content/0/Effective_Modern_C__.pdf)
 1. [Initializers Aggregates](https://eel.is/c++draft/dcl.init.aggr)
 1. [Why does initialization of array of pairs still need double braces in C++14?](https://stackoverflow.com/questions/50598248/why-does-initialization-of-array-of-pairs-still-need-double-braces-in-c14)
-1. [Initializing vector<string> with double curly braces](https://stackoverflow.com/questions/46664728/initializing-vectorstring-with-double-curly-braces)
+1. [Initializing vector\<string\> with double curly braces](https://stackoverflow.com/questions/46664728/initializing-vectorstring-with-double-curly-braces)
 1. [Vector initialization with double curly braces: std::string vs int](https://stackoverflow.com/questions/46665914/vector-initialization-with-double-curly-braces-stdstring-vs-int)
 1. [When can outer braces be omitted in an initializer list?](https://stackoverflow.com/questions/11734861/when-can-outer-braces-be-omitted-in-an-initializer-list)
 1. [std::basic_string::basic_string](https://en.cppreference.com/w/cpp/string/basic_string/basic_string.html)
