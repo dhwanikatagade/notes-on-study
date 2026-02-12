@@ -598,3 +598,10 @@ layout: default
 1. [What is the purpose of std::aligned_storage?](https://stackoverflow.com/questions/50271304/what-is-the-purpose-of-stdaligned-storage)
 1. [Deprecate std::aligned_storage and std::aligned_union](https://www.open-std.org/jtc1/sc22/wg21/docs/papers/2021/p1413r3.pdf)
 1. [Facebook Open-source Library](https://github.com/facebook/folly/blob/29e6730468df3a3f874abd5bc671650dffcd465f/folly/Traits.h#L590)
+
+
+TODO - https://stackoverflow.com/questions/78888919/why-does-the-size-of-a-struct-change-depending-on-whether-an-initial-value-is-us
+
+also consider where should we place the concept of array address and first element address being different - https://stackoverflow.com/questions/72514145/address-of-an-array-different-with-the-address-of-the-first-element
+c++ address of array and address of first element may not be same why - google search
+https://stackoverflow.com/questions/4810664/how-do-i-use-arrays-in-c 

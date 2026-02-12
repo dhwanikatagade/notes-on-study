@@ -324,3 +324,6 @@ layout: default
 1. [SWIG](https://en.wikipedia.org/wiki/SWIG)
 1. [replace c++ with go + swig](https://stackoverflow.com/questions/8791954/replace-c-with-go-swig)
 1. [Linking to Older Versioned Symbols](https://web.archive.org/web/20160107032111/http://www.trevorpounds.com/blog/?p=103)
+
+
+https://github.com/react-native-community/discussions-and-proposals/issues/257
