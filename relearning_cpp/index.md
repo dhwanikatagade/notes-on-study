@@ -28,3 +28,4 @@ layout: default
 * [Notes on ELF files and dynamic linking](elf_files_dynamic_linking.md)
 * [Notes on working with core dump files](working_with_core_dump_files.md)
 * [Notes on best practices for a portable general library](best_practice_portable_library.md)
+* [Notes on pointer provenance and std::launder](pointer_provenance_and_std_launder.md)
