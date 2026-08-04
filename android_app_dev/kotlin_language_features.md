@@ -1,7 +1,13 @@
 ---
 layout: default
 ---
-### Trailing lambda syntax
+# Some interesting Kotlin language features
+
+## Trailing lambda syntax
+- TODO
+
+
+## Kotlin coroutine dispatchers
 - TODO
 
 
