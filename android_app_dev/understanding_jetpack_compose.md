@@ -171,70 +171,19 @@ layout: default
   - It then triggers a run of the required composable tree
   - The composables re-render the UI objects and update the slot table
 - All of the above happens internally when `setContent` is invoked by the code in `ComponentActivity`
-- All of the UI rendering and updates happen only on the UI thread via `Dispatchers.Main`
+- All of the UI rendering and refresh happen only on the UI thread via `Dispatchers.Main`
   - The state can be modified on any other thread asynchronously
-  - The state can also be modified from the UI thread as part of a UI event handler
+  - Commonly, the state can also be modified from the UI thread as part of a UI event handler
   - The resulting UI update does not happen as a synchronous callback, but as an asynchronous selective refresh
 
 
 
-
-### How does it interact with `LaunchedEffect`?
-
-A common misconception is that all Compose coroutines are the recomposer's coroutine.
-
-For example:
-
-```kotlin
-@Composable
-fun MyScreen() {
-    LaunchedEffect(Unit) {
-        // This is NOT the recomposer's coroutine.
-    }
-}
-```
-
-`LaunchedEffect` launches a **child coroutine** in the composition's coroutine scope. It is managed by the recomposer (started when the effect enters the composition and cancelled when it leaves), but it is **not** the recomposer's own event-loop coroutine.
-
-### Relationship to `rememberCoroutineScope()`
-
-Similarly:
-
-```kotlin
-val scope = rememberCoroutineScope()
-
-Button(onClick = {
-    scope.launch {
-        // Also not the recomposer's coroutine.
-    }
-})
-```
-
-These coroutines share the composition's coroutine context but are independent child jobs used for application logic, not for running recomposition.
-
-### Summary
-
-There are several distinct coroutines involved in a Compose app:
-
-| Coroutine                               | Purpose                                                                                                        |
-| --------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| **Recomposer's coroutine**              | Runs `runRecomposeAndApplyChanges()`, waits for invalidations, performs recomposition, and applies UI changes. |
-| **`LaunchedEffect` coroutines**         | Run user-defined suspend code tied to the composable's lifecycle.                                              |
-| **`rememberCoroutineScope` coroutines** | Run user-launched work tied to the composition lifecycle.                                                      |
-
-The key idea is that the **recomposer's coroutine is the runtime's internal event loop** that continuously waits for state changes and drives recomposition. Other Compose coroutines (such as those from `LaunchedEffect`) are separate child coroutines used for application logic, not for the recomposition process itself.
-
-
-
-
-
 ### References:
-1. []()
-1. []()
-1. []()
-1. []()
-1. []()
-1. []()
-1. []()
-1. []()
-
+1. [Beginner’s Guide to Composable Functions in Jetpack Compose](https://medium.com/@YodgorbekKomilo/beginners-guide-to-composable-functions-in-jetpack-compose-d3a5c25ce325)
+1. [Understanding Jetpack Compose — part 1 of 2](https://medium.com/androiddevelopers/understanding-jetpack-compose-part-1-of-2-ca316fe39050)
+1. [Jetpack Compose phases](https://developer.android.com/develop/ui/compose/phases)
+1. [State and Jetpack Compose](https://developer.android.com/develop/ui/compose/state)
+1. [Scoped recomposition in Jetpack Compose — what happens when state changes?](https://blog.zachklipp.com/scoped-recomposition-in-jetpack-compose-what-happens-when-state-changes/)
+1. [Compose layout basics](https://developer.android.com/develop/ui/compose/layouts/basics)
+1. [Lazy lists and lazy grids](https://developer.android.com/develop/ui/compose/lists)
+1. [Core Of JetPack Compose: What is Stateless, Stateful, Composition, Recomposition, and State Hoisting?](https://medium.com/@droiddev5911/core-of-jetpack-compose-what-is-stateless-stateful-composition-recomposition-and-state-48ec24703b4a)

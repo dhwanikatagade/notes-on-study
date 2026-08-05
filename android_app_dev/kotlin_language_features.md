@@ -7,7 +7,15 @@ layout: default
 - TODO
 
 
+## Kotlin regular functions and coroutines
+- TODO
+
+
 ## Kotlin coroutine dispatchers
+- TODO
+
+
+## Delegate syntax
 - TODO
 
 
