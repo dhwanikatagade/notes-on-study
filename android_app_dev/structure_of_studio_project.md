@@ -28,6 +28,7 @@ layout: default
   - An activity can correspond to one screen or sometimes can host multiple screens
 - It is called `MainActivity` by convention and is marked as the entry point in the app's manifest
   - ```kotlin
+    // MainActivity.kt
     class MainActivity : ComponentActivity() {
       override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +47,7 @@ layout: default
     }
     ```
   - ```xml
+    <!-- AndroidManifest.xml -->
     <activity
       android:name=".MainActivity"
       android:exported="true"
