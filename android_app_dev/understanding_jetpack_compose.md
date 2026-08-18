@@ -177,6 +177,337 @@ layout: default
   - The resulting UI update does not happen as a synchronous callback, but as an asynchronous selective refresh
 
 
+## Use of Compose Navigation
+- In older Android UI, multiple screen navigation was managed by `Fragment` and `FragmentManager`
+- In Jetpack Compose, the recommended approach is to use a single `Activity` and Compose Navigation to manage multiple screens
+  - Compose Navigation is part of Android's Jetpack Navigation library
+  - We define each screen as a composable function and use Compose Navigation to move between them
+  - The object dependencies are as follows
+    - ```text
+      Activity
+        ↓
+      NavHost
+        ↓
+      Composable screens
+        ↓
+      ViewModels / state
+        ↓
+      repositories/data layer
+      ```
+  - An example of the use of Compose Navigation
+    - ```kotlin
+      class MainActivity : ComponentActivity() {
+        override fun onCreate(savedInstanceState: Bundle?) {
+          super.onCreate(savedInstanceState)
+          setContent {
+            App()
+          }
+        }
+      }
+
+      // Define routes that don't take any arguments
+      @Serializable
+      object Home
+
+      @Serializable
+      object Profile
+
+      @Composable
+      fun App() {
+        val navController = rememberNavController()
+
+        NavHost(
+          navController = navController,
+          startDestination = Home
+        ) {
+          composable(Home) {
+            HomeScreen(
+              onProfileClick = {
+                navController.navigate(Profile)
+              }
+            )
+          }
+
+          composable(Profile) {
+            ProfileScreen()
+          }
+        }
+      }
+      ```
+  - The following are the components of Compose Navigation
+    - `NavController`
+      - It controls the navigation between multiple routes
+      - It keeps track of the current screen and its navigation path from the home screen
+      - It can navigate to another screen from any screen
+        - ```kotlin
+          navController.navigate("profile")
+          ```
+      - It manages back navigation from any screen
+      - `NavController` is usually created once for a composable function and remembered for it's future runs
+        - ```kotlin
+          val navController = rememberNavController()
+          ```
+        - This is so that the navigation state can be maintained across re-compositions of the composable
+    - `NavHost`
+      - It maintains the navigation graph by defining all possible screens/routes
+      - It takes the shared `NavController` as a parameter
+        - The `NavHost` holds and displays the destination composables
+        - The `NavController` manages the navigation to the destination
+      - It also takes the `startDestination` as a parameter that tells which screen to show first
+    - `composable(Route)`
+      - This defines a destination with a corresponding route
+      - A composable function that defines a screen is defined under this
+      - The older method of defining a composable used string routes (`composable("Home")`)
+      - But since this was error prone now a corresponding `@Serializable` `data` type is used
+
+
+
+## Working with `ViewModel` classes
+- A `ViewModel` in Android is a class that holds and manages UI data across UI refreshes
+- It separates your UI logic from your UI components like Activities, Fragments, or Compose screens
+- A `ViewModel` typically performs the following functions
+  - It stores the data that is displayed on the screen
+  - It survives configuration changes such as screen rotation that destroy and recreate UI elements
+  - It makes calls to repositories to load or save data
+  - It exposes data to the UI using `StateFlow` or `MutableStateFlow`
+  - It contains presentation logic but does not hold references to UI components
+    - This makes a `ViewModel` and it's presentation logic easily testable
+- The following is an example of a typical use of a `ViewModel`
+  - ```kotlin
+    class UserViewModel : ViewModel() {
+
+      private val _users = MutableStateFlow<List<User>>(emptyList())
+      val users: StateFlow<List<User>> = _users.asStateFlow()
+
+      init {
+        loadUsers()
+      }
+
+      private fun loadUsers() {
+        viewModelScope.launch {
+          // Load users asynchronously
+        }
+      }
+    }
+    ```
+    - `private val _users` serves as the `MutableStateFlow` that the `ViewModel` manages and manipulates
+    - `val users` serves as the `StateFlow` that observers will collect changes from
+    - The actual manipulation of the `MutableStateFlow` can happen asynchronously, in any order, at any time
+  - ```kotlin
+    class MainActivity : ComponentActivity() {
+
+      override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContent {
+          MyApp()
+        }
+      }
+    }
+    ```
+    - `MainActivity` only does `setContent()` with the `MyApp()` top level composable UI
+  - ```kotlin
+    @Composable
+    fun MyApp(
+      viewModel: UserViewModel = viewModel()
+    ) {
+      val users by viewModel.users.collectAsStateWithLifecycle()
+
+      UserScreen(
+        users = users
+      )
+    }
+    ```
+    - `MyApp()` in this case is the state-UI boundary so it has the `ViewModel` as part of its interface
+    - It is passed to `MyApp()` as a parameter with a default value retrieved from `viewModel()`
+      - `viewModel()` uses the appropriate `ViewModelStoreOwner` and gets the `ViewModel` associated with that owner
+      - In the above case `viewModel()` will resolve `MainActivity` as its `ViewModelStoreOwner`
+      - For testing and preview purposes, a mock `ViewModel` can be passed to `MyApp()`
+    - Inside `MyApp()` `collectAsStateWithLifecycle()` retrieves a `State<List<User>>` object
+      - For Android UI, `collectAsStateWithLifecycle()` is preferred over `collectAsState()`
+      - It turns off the collection coroutine when the observing UI is not active
+      - Functionally it works somewhat like the following code
+        - ```kotlin
+          val state = remember { mutableStateOf(initialValue) }
+
+          lifecycleScope.launch {
+              lifecycle.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                  flow.collect { value ->
+                      state.value = value
+                  }
+              }
+          }
+          ```
+      - `collectAsState()` can also be used in its place, but only as a conscious design choice
+  - ```kotlin
+    @Composable
+    fun UserScreen(
+      users: List<User>
+    ) {
+      LazyColumn {
+        items(users) { user ->
+          Text(text = user.name)
+        }
+      }
+    }
+    ```
+    - For `UserScreen`, a data parameter of type `List<User>>` is passed
+      - This has the advantage that `UserScreen` can be easily previewed with a hard coded `List<User>`
+        - ```kotlin
+          @Preview
+          @Composable
+          fun UserScreenPreview() {
+            UserScreen(
+              users = listOf(
+                User("Alice"),
+                User("Bob")
+              )
+            )
+          }
+          ```
+      - `UserScreen` adheres to the single responsibility principle and does not care where the user list arrives from
+      - It also enhances the cross usability of `UserScreen` as a UI component
+- In modern Jetpack Compose based UI, it is recommended to move the `ViewModel` observation closer to the UI Composable
+  - Compose automatically recomposes the minimal composable group when the state changes
+  - In cases where Compose Navigation is used, the following is an alternative wiring of the components
+    - ```kotlin
+      class MainActivity : ComponentActivity() {
+        override fun onCreate(savedInstanceState: Bundle?) {
+          super.onCreate(savedInstanceState)
+          setContent {
+            App()
+          }
+        }
+      }
+
+      @Composable
+      fun App() {
+        val navController = rememberNavController()
+        NavHost(
+          navController = navController,
+          startDestination = AppScreen.Route1.name
+        ) {
+          composable(AppScreen.Route1.name) {
+            Route1(navController)
+          }
+        }
+      }
+      ```
+      - The `App()` holds the `NavHost` and sets up the navigation graph
+      - `composable(AppScreen.Route1.name)` creates a navigation destination for the route `Route1`
+        - This internally creates a `NavBackStackEntry` which is also a `ViewModelStoreOwner`
+        - In Jetpack Compose, `ComponentActivity`, `Fragment` and `NavBackStackEntry` implement `ViewModelStoreOwner`
+        - These have a `ViewModelStore` association that keeps a `ViewModel` alive across their destruction and recreation
+    - ```kotlin
+      @Composable
+      fun Route1(
+        navController: NavController,
+        viewModel: UserViewModel = viewModel()
+      ) {
+        val users by viewModel.users.collectAsStateWithLifecycle()
+        Screen1(
+          users = users
+        )
+      }
+
+      @Composable
+      fun Screen1(
+        users: List<User>
+      ) {
+        // display users
+      }
+      ```
+      - In `Route1` when `viewModel()` is called, it finds the `NavBackStackEntry` as the `LocalViewModelStoreOwner`
+      - This corresponds to the `composable(AppScreen.Route1.name)` navigation destination
+      - This has the effect that each navigation destination can provide a different instance of `ViewModel`
+    - In this case each component performs the following responsibilities
+      - Activity - Start the Compose UI with `setContent()`
+      - App - Create the `NavController` and define the navigation graph
+      - NavBackStackEntry - Navigation Compose creates it for each destination where it holds the `ViewModelStore`
+      - Route - connects `ViewModel` / state to the UI
+      - ViewModel - owns business/UI state and actions
+      - Screen - mostly renders the state and emits user events
+- The lifecycle awareness of `ViewModel` classes
+  - `class MyViewModel : ViewModel()` is just a class that extends `ViewModel`
+    - This gives it ViewModel semantics such as `onCleared()` and allows it to be managed by the ViewModel infrastructure
+    - The definition of a `ViewModel` is itself not lifecycle aware
+    - It is the ViewModel infrastructure, using which the ViewModel is retrieved, that provides the lifecycle awareness
+  - What magic does `by viewModels()` actually do?
+    - The `by viewModels()` delegate obtains the ViewModel from the `ViewModelStore` of the `ComponentActivity`
+      - The `ComponentActivity` implements `ViewModelStoreOwner`
+      - The `ComponentActivity` correspondingly obtains and owns the `ViewModelStore`
+      - The `ViewModelStore` stores the `ViewModel`
+    - That `ViewModelStore` is what allows the `ViewModel` to be retained across configuration changes
+    - The lifecycle of the `ViewModel` is tied to the lifecycle of the `ViewModelStore` owner
+    - The owner is typically an `Activity`, `Fragment`, or a navigation graph
+    - It survives configuration changes that recreate the owner and is destroyed when its owner is permanently destroyed
+  - If one simply does `private val viewModel = MyViewModel()`, then this `viewModel` will not be lifetime aware
+    - This `viewModel` will be created anew for each occurrence of the `ComponentActivity`
+    - This would not have the configuration-change survival property that `ViewModel` is required to support
+  - A `ViewModel` becomes lifecycle-scoped when it is obtained from a `ViewModelStore` belonging to a `ViewModelStoreOwner`
+  - The delegate `by viewModels()` is just convenience syntax for working with this infrastructure
+- Best practices for `ViewModel` classes
+  - Keep one `ViewModel` per screen or closely related UI flow
+  - Do not store `Context`, `Activity`, `Fragment`, or `View` references in a `ViewModel`
+  - Use `viewModelScope` for asynchronous work related to a `ViewModel`
+  - Expose immutable `StateFlow` and keep `MutableStateFlow` private
+  - Place the `ViewModel` reference close to the UI it serves
+
+
+
+## Working with `StateFlow` and `MutableStateFlow`
+- `StateFlow` is Kotlin's modern alternative for holding observable state
+  - It allows observers to receive changes to the state and react to it
+  - It allows the state to only be read and not modified as observers only receive value changes
+  - This is achieved through Kotlin coroutines that activate or deactivate when the observer is live
+  - ```kotlin
+    val userName: StateFlow<String>
+
+    // the state change is collected using coroutines as follows
+    lifecycleScope.launch {
+      repeatOnLifecycle(Lifecycle.State.STARTED) {
+        // collect 
+        viewModel.userName.collect { name ->
+          textView.text = name
+        }
+      }
+    }
+    ```
+    - `lifecycleScope.launch` starts a coroutine tied to the Activity's lifecycle
+      - When the Activity is destroyed, the coroutine is cancelled automatically
+    - `repeatOnLifecycle(Lifecycle.State.STARTED)` ensures the coroutine is started only when lifecycle is started
+      - And also it is stopped when the lifecycle ends
+      - This prevents collecting the state data while the UI isn't visible or active
+    - `viewModel.userName.collect` call starts a coroutine that runs till terminated
+      - This waits for a `State` value to arrive, and when it does, triggers the lambda `{name -> ... }`
+      - This coroutine is managed by the Compose framework
+- `MutableStateFlow` is the writable version of `StateFlow`
+  - `MutableStateFlow` is usually used in conjunction with `StateFlow`
+  - The common usage pattern is like follows
+    - ```kotlin
+      class CounterViewModel : ViewModel() {
+
+        // private so only the ViewModel can change this
+        private val _count = MutableStateFlow(0)
+
+        // provides a public read only collectable view
+        val count: StateFlow<Int> = _count.asStateFlow()
+
+        fun increment() {
+          _count.value++
+        }
+      }
+
+      // inside UI Composables
+      val count by viewModel.count.collectAsStateWithLifecycle()
+
+      Button(onClick = { viewModel.increment() }) {
+        Text("Increment $count")
+      }
+      ```
+- `StateFlow` and `MutableStateFlow` are not lifecycle-aware by themselves
+  - When these are combined with `repeatOnLifecycle()` and other Compose collection APIs we get lifecycle aware behaviour
+- In older Android UI code, `LiveData` was used for this purpose
+
 
 ### References:
 1. [Beginner’s Guide to Composable Functions in Jetpack Compose](https://medium.com/@YodgorbekKomilo/beginners-guide-to-composable-functions-in-jetpack-compose-d3a5c25ce325)
@@ -187,3 +518,11 @@ layout: default
 1. [Compose layout basics](https://developer.android.com/develop/ui/compose/layouts/basics)
 1. [Lazy lists and lazy grids](https://developer.android.com/develop/ui/compose/lists)
 1. [Core Of JetPack Compose: What is Stateless, Stateful, Composition, Recomposition, and State Hoisting?](https://medium.com/@droiddev5911/core-of-jetpack-compose-what-is-stateless-stateful-composition-recomposition-and-state-48ec24703b4a)
+1. [Design your navigation graph](https://developer.android.com/guide/navigation/design)
+1. [Create a navigation controller](https://developer.android.com/guide/navigation/navcontroller)
+1. [Type safety in Kotlin DSL and Navigation Compose](https://developer.android.com/guide/navigation/design/type-safety)
+
+
+
+
+
