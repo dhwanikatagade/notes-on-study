@@ -351,6 +351,7 @@ layout: default
     }
     ```
     - For `UserScreen`, a data parameter of type `List<User>>` is passed
+      - If a composable is meant to be pure UI then it should be given a parameter of state value
       - This has the advantage that `UserScreen` can be easily previewed with a hard coded `List<User>`
         - ```kotlin
           @Preview
@@ -367,6 +368,13 @@ layout: default
       - `UserScreen` adheres to the single responsibility principle and does not care where the user list arrives from
       - It also enhances the cross usability of `UserScreen` as a UI component
 - In modern Jetpack Compose based UI, it is recommended to move the `ViewModel` observation closer to the UI Composable
+  - If a composable is the boundary between UI and application state, let it obtain the `ViewModel` and pass state downward
+    - This avoids `ViewModel` parameter drilling down the composition hierarchy
+    - The higher up composables don't need to be aware of all the `ViewModel`s their children composables need
+    - The Compose lifecycle infrastructure handles the lifetimes of `ViewModel` objects irrespective of where they are accessed
+    - Even if an Activity owns the `ViewModelStore`, it doesn't have to hold a reference to every `ViewModel` in its own fields
+      - The owner controls the lifetime of the `ViewModel` and hence the owner should be wired accordingly
+      - The UI composables can request their `ViewModel` dependencies at the point where they are needed
   - Compose automatically recomposes the minimal composable group when the state changes
   - In cases where Compose Navigation is used, the following is an alternative wiring of the components
     - ```kotlin
@@ -445,6 +453,32 @@ layout: default
     - This would not have the configuration-change survival property that `ViewModel` is required to support
   - A `ViewModel` becomes lifecycle-scoped when it is obtained from a `ViewModelStore` belonging to a `ViewModelStoreOwner`
   - The delegate `by viewModels()` is just convenience syntax for working with this infrastructure
+- What is the difference - `viewModel()` vs `by viewModels()`
+  - ```kotlin
+    class MainActivity : ComponentActivity() {
+      private val viewModel: UserViewModel by viewModels()
+    }
+    ```
+    - `by viewModels()` is the Activity ViewModels API
+    - It is implemented on `ComponentActivity` and is part of the `activity-ktx` activity extension library
+    - It internally uses the `LocalViewModelStoreOwner` which in case of this implementation is the `Activity`
+    - This is also available on a `Fragment` as part of the `fragment-ktx` fragment extension library
+    - From inside a fragment the `ViewModelStore` of the enclosing activity can be accessed by `activityViewModels()`
+    - The `by` part is the property delegate that extracts the `UserViewModel` from the correct `ViewModelStore` on each access
+  - ```kotlin
+    @Composable
+    fun MyApp(
+      viewModel: UserViewModel = viewModel()
+    ) {
+      // ...
+    }
+    ```
+    - `viewModel()` is the Compose ViewModel API
+    - It is defined as part of the `lifecycle-viewmodel-compose` library
+    - This is not a delegate but a regular function and returns the `ViewModel` from the `LocalViewModelStoreOwner`
+  - Both perform roughly the same operation
+  - For modern Jetpack Compose, it is preferred to use the Compose viewModel API at the screen-level composables
+  - For those cases where the Activity still needs the `ViewModel`, the Activity ViewModels API can be used
 - Best practices for `ViewModel` classes
   - Keep one `ViewModel` per screen or closely related UI flow
   - Do not store `Context`, `Activity`, `Fragment`, or `View` references in a `ViewModel`
@@ -455,7 +489,11 @@ layout: default
 
 
 ## Working with `StateFlow` and `MutableStateFlow`
-- `StateFlow` is Kotlin's modern alternative for holding observable state
+- `State<T>` and `MutableState<T>` are types for observable values
+  - `State<T>` is read only while `MutableState<T>` extends from it and is writeable
+  - `MutableState<T>` is a `State<T>`
+- `StateFlow<T>` is Kotlin's modern alternative for holding observable state
+  - It is a read only Kotlin Flow that always has a current value
   - It allows observers to receive changes to the state and react to it
   - It allows the state to only be read and not modified as observers only receive value changes
   - This is achieved through Kotlin coroutines that activate or deactivate when the observer is live
@@ -480,8 +518,8 @@ layout: default
     - `viewModel.userName.collect` call starts a coroutine that runs till terminated
       - This waits for a `State` value to arrive, and when it does, triggers the lambda `{name -> ... }`
       - This coroutine is managed by the Compose framework
-- `MutableStateFlow` is the writable version of `StateFlow`
-  - `MutableStateFlow` is usually used in conjunction with `StateFlow`
+- `MutableStateFlow<T>` is the writeable version of `StateFlow<T>`
+  - `MutableStateFlow<T>` is usually used in conjunction with `StateFlow<T>`
   - The common usage pattern is like follows
     - ```kotlin
       class CounterViewModel : ViewModel() {
@@ -504,8 +542,12 @@ layout: default
         Text("Increment $count")
       }
       ```
-- `StateFlow` and `MutableStateFlow` are not lifecycle-aware by themselves
+- `StateFlow<T>` and `MutableStateFlow<T>` are not lifecycle-aware by themselves
   - When these are combined with `repeatOnLifecycle()` and other Compose collection APIs we get lifecycle aware behaviour
+    - `MutableState<T>` is mutable state while `State<T>` is read only state understood by Compose
+    - `MutableStateFlow<T>` is mutable observable state understood by Kotlin Coroutines/Flow
+    - `StateFlow<T>` is the read-only observable state understood by Kotlin Coroutines/Flow
+    - `collectAsState()` is the bridge between the two worlds
 - In older Android UI code, `LiveData` was used for this purpose
 
 
@@ -521,8 +563,14 @@ layout: default
 1. [Design your navigation graph](https://developer.android.com/guide/navigation/design)
 1. [Create a navigation controller](https://developer.android.com/guide/navigation/navcontroller)
 1. [Type safety in Kotlin DSL and Navigation Compose](https://developer.android.com/guide/navigation/design/type-safety)
-
-
-
-
+1. [Migration to Compose Considerations](https://developer.android.com/develop/ui/compose/migrate/other-considerations)
+1. [ViewModel Scoping APIs](https://developer.android.com/topic/libraries/architecture/viewmodel/viewmodel-apis)
+1. [Compose and other libraries](https://developer.android.com/develop/ui/compose/libraries)
+1. [MutableStateFlow](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-mutable-state-flow/)
+1. [StateFlow](https://kotlinlang.org/api/kotlinx.coroutines/kotlinx-coroutines-core/kotlinx.coroutines.flow/-state-flow/)
+1. [Navigate to a destination](https://developer.android.com/guide/navigation/use-graph/navigate)
+1. [Activity](https://developer.android.com/reference/kotlin/androidx/activity/package-summary.html)
+1. [ViewModel Scoping APIs](https://developer.android.com/topic/libraries/architecture/views/viewmodel/viewmodel-apis-views)
+1. [ComponentActivity](https://developer.android.com/reference/kotlin/androidx/activity/ComponentActivity)
+1. [Navigation Component — Comparison](https://skynight1996.medium.com/navigation-component-comparison-between-viewmodels-activityviewmodels-and-ae0145734228)
 
