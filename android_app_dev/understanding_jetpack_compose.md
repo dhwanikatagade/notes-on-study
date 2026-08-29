@@ -103,6 +103,7 @@ layout: default
   - State is remembered at some level of the composition tree and then passed down to the children
     - The lifetime of the remembered state is linked to the lifetime of the remembering parent
     - The lifetime of the child composable that use the state is also linked to that of the remembering parent
+    - So this does not cause any lifetime conflicts between definition and usage
   - ```kotlin
     @Composable
     fun Child(state: MutableState<Int>) {
@@ -370,10 +371,10 @@ layout: default
 - In modern Jetpack Compose based UI, it is recommended to move the `ViewModel` observation closer to the UI Composable
   - If a composable is the boundary between UI and application state, let it obtain the `ViewModel` and pass state downward
     - This avoids `ViewModel` parameter drilling down the composition hierarchy
-    - The higher up composables don't need to be aware of all the `ViewModel`s their children composables need
+    - The higher up composables don't need to be aware of all the `ViewModel` objects their children composables need
     - The Compose lifecycle infrastructure handles the lifetimes of `ViewModel` objects irrespective of where they are accessed
     - Even if an Activity owns the `ViewModelStore`, it doesn't have to hold a reference to every `ViewModel` in its own fields
-      - The owner controls the lifetime of the `ViewModel` and hence the owner should be wired accordingly
+      - The owner controls the lifetime of the `ViewModel` and so the owner should be wired with that in mind
       - The UI composables can request their `ViewModel` dependencies at the point where they are needed
   - Compose automatically recomposes the minimal composable group when the state changes
   - In cases where Compose Navigation is used, the following is an alternative wiring of the components
